@@ -3,16 +3,16 @@
 	"id": "homelink",
 	"version": "${version}",
 	"name": "HomeLink",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "Teleportation mod with homes and back functionality",
 	"authors": [
 		"Me!"
 	],
 	"contact": {
 		"homepage": "https://github.com/Sumutiu",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"sources": "https://github.com/Sumutiu/HomeLink"
 	},
 	"license": "CC0-1.0",
-	"icon": "assets/homelink/icon.png",
+	"icon": "assets/homelink/HomeLink.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
