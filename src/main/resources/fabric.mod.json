@@ -1,0 +1,31 @@
+{
+	"schemaVersion": 1,
+	"id": "homelink",
+	"version": "${version}",
+	"name": "HomeLink",
+	"description": "This is an example description! Tell everyone what your mod is about!",
+	"authors": [
+		"Me!"
+	],
+	"contact": {
+		"homepage": "https://github.com/Sumutiu",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/homelink/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.sumutiu.homelink.HomeLink"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.16.13",
+		"minecraft": "~1.21.4",
+		"java": ">=21",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}
