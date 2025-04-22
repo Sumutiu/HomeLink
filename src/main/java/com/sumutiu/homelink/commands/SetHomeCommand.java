@@ -9,6 +9,8 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 
+import static com.sumutiu.homelink.HomeLink.LOGGER;
+
 public class SetHomeCommand {
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(CommandManager.literal("sethome")
@@ -16,7 +18,7 @@ public class SetHomeCommand {
                         .executes(context -> {
                             ServerCommandSource source = context.getSource();
                             if (!(source.getEntity() instanceof ServerPlayerEntity player)) {
-                                System.out.println("[HomeLink]: This command can only be used by players.");
+                                LOGGER.warn("[HomeLink]: This command can only be used by players.");
                                 return 0;
                             }
 

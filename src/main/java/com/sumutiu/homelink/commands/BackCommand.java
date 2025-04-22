@@ -17,6 +17,8 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
 
+import static com.sumutiu.homelink.HomeLink.LOGGER;
+
 import java.util.EnumSet;
 
 public class BackCommand {
@@ -25,7 +27,7 @@ public class BackCommand {
                 .executes(ctx -> {
                     ServerCommandSource source = ctx.getSource();
                     if (!(source.getEntity() instanceof ServerPlayerEntity player)) {
-                        System.out.println("[HomeLink]: This command can only be used by players.");
+                        LOGGER.warn("[HomeLink]: This command can only be used by players.");
                         return 0;
                     }
 
@@ -37,7 +39,7 @@ public class BackCommand {
 
                     MinecraftServer server = player.getServer();
                     if (server == null) {
-                        System.out.println("[HomeLink]: Server not available.");
+                        LOGGER.error("[HomeLink]: Server not available.");
                         return 0;
                     }
 

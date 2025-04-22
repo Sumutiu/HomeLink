@@ -18,60 +18,83 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
 
+import static com.sumutiu.homelink.HomeLink.LOGGER;
+
 import java.util.EnumSet;
+import java.util.Map;
 
 public class HomeCommand {
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(CommandManager.literal("home")
+                .executes(ctx -> {
+                    ServerCommandSource source = ctx.getSource();
+                    if (!(source.getEntity() instanceof ServerPlayerEntity player)) {
+                        LOGGER.warn("[HomeLink]: This command can only be used by players.");
+                        return 0;
+                    }
+
+                    Map<String, HomeData> playerHomes = HomeStorage.getAllHomes(player);
+                    if (playerHomes == null || playerHomes.isEmpty()) {
+                        player.sendMessage(HomeLinkMessages.prefix("You have no homes set."), false);
+                        return 0;
+                    }
+
+                    Map.Entry<String, HomeData> first = playerHomes.entrySet().iterator().next();
+                    return teleportToHome(player, first.getKey(), first.getValue());
+                })
                 .then(CommandManager.argument("name", StringArgumentType.word())
                         .suggests(HomeStorage::suggestHomeNames)
                         .executes(ctx -> {
                             ServerCommandSource source = ctx.getSource();
                             if (!(source.getEntity() instanceof ServerPlayerEntity player)) {
-                                System.out.println("[HomeLink]: This command can only be used by players.");
+                                LOGGER.warn("[HomeLink]: This command can only be used by players.");
                                 return 0;
                             }
 
                             String name = StringArgumentType.getString(ctx, "name");
                             HomeData home = HomeStorage.getHome(player, name);
 
-                            if (home != null) {
-                                MinecraftServer server = player.getServer();
-                                if (server == null) {
-                                    System.out.println("[HomeLink]: Server not available.");
-                                    return 0;
-                                }
-
-                                Identifier worldId = Identifier.tryParse(home.world);
-                                RegistryKey<World> worldKey = RegistryKey.of(RegistryKeys.WORLD, worldId);
-                                ServerWorld targetWorld = server.getWorld(worldKey);
-
-                                if (targetWorld == null) {
-                                    player.sendMessage(HomeLinkMessages.prefix("World not found: " + home.world), false);
-                                    return 0;
-                                }
-
-                                TeleportScheduler.schedule(player, HomeLinkConfig.getHomeDelay(), () -> {
-                                    player.teleport(
-                                            targetWorld,
-                                            home.position.getX() + 0.5,
-                                            home.position.getY(),
-                                            home.position.getZ() + 0.5,
-                                            EnumSet.noneOf(PositionFlag.class),
-                                            home.yaw,
-                                            home.pitch,
-                                            false
-                                    );
-                                    player.sendMessage(HomeLinkMessages.prefix("Teleported to home '" + name + "'."), false);
-                                });
-                                return 1;
-
-                            } else {
+                            if (home == null) {
                                 player.sendMessage(HomeLinkMessages.prefix("Home '" + name + "' not found."), false);
                                 return 0;
                             }
+
+                            return teleportToHome(player, name, home);
                         })
                 )
         );
+    }
+
+    private static int teleportToHome(ServerPlayerEntity player, String name, HomeData home) {
+        MinecraftServer server = player.getServer();
+        if (server == null) {
+            LOGGER.error("[HomeLink]: Server not available.");
+            return 0;
+        }
+
+        Identifier worldId = Identifier.tryParse(home.world);
+        RegistryKey<World> worldKey = RegistryKey.of(RegistryKeys.WORLD, worldId);
+        ServerWorld targetWorld = server.getWorld(worldKey);
+
+        if (targetWorld == null) {
+            player.sendMessage(HomeLinkMessages.prefix("World not found: " + home.world), false);
+            return 0;
+        }
+
+        TeleportScheduler.schedule(player, HomeLinkConfig.getHomeDelay(), () -> {
+            player.teleport(
+                    targetWorld,
+                    home.position.getX() + 0.5,
+                    home.position.getY(),
+                    home.position.getZ() + 0.5,
+                    EnumSet.noneOf(PositionFlag.class),
+                    home.yaw,
+                    home.pitch,
+                    false
+            );
+            player.sendMessage(HomeLinkMessages.prefix("Teleported to home '" + name + "'."), false);
+        });
+
+        return 1;
     }
 }

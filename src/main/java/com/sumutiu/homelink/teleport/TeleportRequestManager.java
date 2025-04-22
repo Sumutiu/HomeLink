@@ -7,6 +7,8 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import java.util.*;
 import java.util.concurrent.*;
 
+import static com.sumutiu.homelink.HomeLink.LOGGER;
+
 public class TeleportRequestManager {
 
     public enum RequestType {
@@ -17,7 +19,12 @@ public class TeleportRequestManager {
 
     private static final Map<UUID, TeleportRequest> pendingRequests = new HashMap<>();
     private static final Map<UUID, ScheduledFuture<?>> expirationTasks = new HashMap<>();
-    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1, runnable -> {
+        Thread thread = new Thread(runnable);
+        thread.setDaemon(true);
+        thread.setName("HomeLink-TeleportRequestScheduler");
+        return thread;
+    });
 
     public static void sendRequest(ServerPlayerEntity requester, ServerPlayerEntity target, RequestType type) {
         UUID targetId = target.getUuid();
@@ -58,5 +65,14 @@ public class TeleportRequestManager {
 
     public static boolean hasRequest(ServerPlayerEntity target) {
         return pendingRequests.containsKey(target.getUuid());
+    }
+
+    public static void shutdown() {
+        try {
+            scheduler.shutdownNow();
+            LOGGER.info("[HomeLink]: TeleportRequestManager has been shut down.");
+        } catch (Exception e) {
+            LOGGER.error("[HomeLink]: Failed to shut down TeleportRequestManager: {}", e.getMessage());
+        }
     }
 }

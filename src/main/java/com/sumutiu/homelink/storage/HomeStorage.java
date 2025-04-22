@@ -15,9 +15,11 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
+import static com.sumutiu.homelink.HomeLink.LOGGER;
+
 public class HomeStorage {
     private static final Map<String, Map<String, HomeData>> homes = new HashMap<>();
-    private static final File STORAGE_FOLDER = new File("HomeLink");
+    private static final File STORAGE_FOLDER = new File("mods/HomeLink");
     private static final Gson GSON = new Gson();
     private static final Type TYPE = new TypeToken<Map<String, HomeData>>() {}.getType();
 
@@ -32,7 +34,7 @@ public class HomeStorage {
                     homes.put(uuid, data);
                 }
             } catch (IOException e) {
-                System.err.println("[HomeLink - Error] Failed to load homes for " + uuid + ": " + e.getMessage());
+                LOGGER.error("[HomeLink]: Failed to load homes for {}.", uuid, e);
             }
         } else {
             homes.put(uuid, new HashMap<>());
@@ -46,9 +48,9 @@ public class HomeStorage {
         try {
             if (!STORAGE_FOLDER.exists()) {
                 if (STORAGE_FOLDER.mkdirs()) {
-                    System.err.println("[HomeLink - Info] Main mod folder has been created.");
+                    LOGGER.info("[HomeLink]: Main mod folder has been created.");
                 } else {
-                    System.err.println("[HomeLink - Error] Failed to create the main mod folder.");
+                    LOGGER.error("[HomeLink]: Failed to create the main mod folder.");
                 }
             }
 
@@ -56,8 +58,12 @@ public class HomeStorage {
                 GSON.toJson(homes.getOrDefault(uuid, new HashMap<>()), writer);
             }
         } catch (IOException e) {
-            System.err.println("[HomeLink - Error] Failed to save homes for " + uuid + ": " + e.getMessage());
+            LOGGER.error("[HomeLink]: Failed to save homes for {}.", uuid, e);
         }
+    }
+
+    public static Map<String, HomeData> getAllHomes(ServerPlayerEntity player) {
+        return homes.getOrDefault(player.getUuidAsString(), new HashMap<>());
     }
 
     public static boolean setHome(ServerPlayerEntity player, String name, BlockPos pos) {

@@ -10,9 +10,16 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.*;
 
+import static com.sumutiu.homelink.HomeLink.LOGGER;
+
 public class TeleportScheduler {
 
-    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1, runnable -> {
+        Thread thread = new Thread(runnable);
+        thread.setDaemon(true);
+        thread.setName("HomeLink-TeleportScheduler");
+        return thread;
+    });
     private static final Map<UUID, BlockPos> teleportPositions = new ConcurrentHashMap<>();
     private static final Set<UUID> activeTeleports = ConcurrentHashMap.newKeySet();
 
@@ -54,8 +61,16 @@ public class TeleportScheduler {
         }, delaySeconds, TimeUnit.SECONDS);
     }
 
-
     public static boolean isTeleporting(ServerPlayerEntity player) {
         return activeTeleports.contains(player.getUuid());
+    }
+
+    public static void shutdown() {
+        try {
+            scheduler.shutdownNow();
+            LOGGER.info("[HomeLink]: TeleportScheduler has been shut down.");
+        } catch (Exception e) {
+            LOGGER.error("[HomeLink]: Failed to shut down TeleportScheduler: {}", e.getMessage());
+        }
     }
 }

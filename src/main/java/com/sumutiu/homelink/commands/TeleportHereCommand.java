@@ -10,6 +10,8 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 
+import static com.sumutiu.homelink.HomeLink.LOGGER;
+
 public class TeleportHereCommand {
 
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
@@ -18,7 +20,7 @@ public class TeleportHereCommand {
                         .executes(ctx -> {
                             ServerCommandSource source = ctx.getSource();
                             if (!(source.getEntity() instanceof ServerPlayerEntity requester)) {
-                                System.out.println("[HomeLink]: This command can only be used by players.");
+                                LOGGER.warn("[HomeLink]: This command can only be used by players.");
                                 return 0;
                             }
 
@@ -26,7 +28,7 @@ public class TeleportHereCommand {
 
                             MinecraftServer server = requester.getServer();
                             if (server == null) {
-                                System.out.println("[HomeLink]: Server not available.");
+                                LOGGER.error("[HomeLink]: Server not available.");
                                 return 0;
                             }
 

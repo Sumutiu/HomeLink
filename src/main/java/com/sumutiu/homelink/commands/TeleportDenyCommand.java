@@ -10,6 +10,8 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 
+import static com.sumutiu.homelink.HomeLink.LOGGER;
+
 public class TeleportDenyCommand {
 
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
@@ -18,7 +20,7 @@ public class TeleportDenyCommand {
                         .executes(ctx -> {
                             ServerCommandSource source = ctx.getSource();
                             if (!(source.getEntity() instanceof ServerPlayerEntity target)) {
-                                System.out.println("[HomeLink]: This command can only be used by players.");
+                                LOGGER.warn("[HomeLink]: This command can only be used by players.");
                                 return 0;
                             }
 
@@ -26,7 +28,7 @@ public class TeleportDenyCommand {
 
                             MinecraftServer server = target.getServer();
                             if (server == null) {
-                                System.out.println("[HomeLink]: Server not available.");
+                                LOGGER.error("[HomeLink]: Server not available.");
                                 return 0;
                             }
 
