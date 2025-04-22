@@ -18,8 +18,6 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
 
-import static com.sumutiu.homelink.HomeLink.LOGGER;
-
 import java.util.EnumSet;
 import java.util.Map;
 
@@ -29,13 +27,13 @@ public class HomeCommand {
                 .executes(ctx -> {
                     ServerCommandSource source = ctx.getSource();
                     if (!(source.getEntity() instanceof ServerPlayerEntity player)) {
-                        LOGGER.warn("[HomeLink]: This command can only be used by players.");
+                        HomeLinkMessages.Logger(1, HomeLinkMessages.PLAYER_ONLY_COMMAND);
                         return 0;
                     }
 
                     Map<String, HomeData> playerHomes = HomeStorage.getAllHomes(player);
                     if (playerHomes == null || playerHomes.isEmpty()) {
-                        player.sendMessage(HomeLinkMessages.prefix("You have no homes set."), false);
+                        HomeLinkMessages.PrivateMessage(player, HomeLinkMessages.HOME_NONE_SET);
                         return 0;
                     }
 
@@ -47,7 +45,7 @@ public class HomeCommand {
                         .executes(ctx -> {
                             ServerCommandSource source = ctx.getSource();
                             if (!(source.getEntity() instanceof ServerPlayerEntity player)) {
-                                LOGGER.warn("[HomeLink]: This command can only be used by players.");
+                                HomeLinkMessages.Logger(1, HomeLinkMessages.PLAYER_ONLY_COMMAND);
                                 return 0;
                             }
 
@@ -55,7 +53,7 @@ public class HomeCommand {
                             HomeData home = HomeStorage.getHome(player, name);
 
                             if (home == null) {
-                                player.sendMessage(HomeLinkMessages.prefix("Home '" + name + "' not found."), false);
+                                HomeLinkMessages.PrivateMessage(player, String.format(HomeLinkMessages.HOME_NOT_FOUND, name));
                                 return 0;
                             }
 
@@ -68,7 +66,7 @@ public class HomeCommand {
     private static int teleportToHome(ServerPlayerEntity player, String name, HomeData home) {
         MinecraftServer server = player.getServer();
         if (server == null) {
-            LOGGER.error("[HomeLink]: Server not available.");
+            HomeLinkMessages.Logger(2, HomeLinkMessages.SERVER_NOT_AVAILABLE);
             return 0;
         }
 
@@ -77,7 +75,7 @@ public class HomeCommand {
         ServerWorld targetWorld = server.getWorld(worldKey);
 
         if (targetWorld == null) {
-            player.sendMessage(HomeLinkMessages.prefix("World not found: " + home.world), false);
+            HomeLinkMessages.PrivateMessage(player, String.format(HomeLinkMessages.HOME_WORLD_NOT_FOUND, home.world));
             return 0;
         }
 
@@ -92,7 +90,7 @@ public class HomeCommand {
                     home.pitch,
                     false
             );
-            player.sendMessage(HomeLinkMessages.prefix("Teleported to home '" + name + "'."), false);
+            HomeLinkMessages.PrivateMessage(player, String.format(HomeLinkMessages.HOME_TELEPORTED_NAMED, name));
         });
 
         return 1;

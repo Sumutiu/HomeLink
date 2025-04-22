@@ -10,8 +10,6 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 
-import static com.sumutiu.homelink.HomeLink.LOGGER;
-
 public class TeleportHereCommand {
 
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
@@ -27,7 +25,7 @@ public class TeleportHereCommand {
                         .executes(ctx -> {
                             ServerCommandSource source = ctx.getSource();
                             if (!(source.getEntity() instanceof ServerPlayerEntity requester)) {
-                                LOGGER.warn("[HomeLink]: This command can only be used by players.");
+                                HomeLinkMessages.Logger(1, HomeLinkMessages.PLAYER_ONLY_COMMAND);
                                 return 0;
                             }
 
@@ -35,30 +33,30 @@ public class TeleportHereCommand {
 
                             MinecraftServer server = requester.getServer();
                             if (server == null) {
-                                LOGGER.error("[HomeLink]: Server not available.");
+                                HomeLinkMessages.Logger(2, HomeLinkMessages.SERVER_NOT_AVAILABLE);
                                 return 0;
                             }
 
                             ServerPlayerEntity target = server.getPlayerManager().getPlayer(targetName);
                             if (target == null) {
-                                requester.sendMessage(HomeLinkMessages.prefix("Player '" + targetName + "' not found."), false);
+                                HomeLinkMessages.PrivateMessage(requester, String.format(HomeLinkMessages.PLAYER_NOT_FOUND, targetName));
                                 return 0;
                             }
 
                             if (target == requester) {
-                                requester.sendMessage(HomeLinkMessages.prefix("You cannot teleport yourself to yourself."), false);
+                                HomeLinkMessages.PrivateMessage(requester, HomeLinkMessages.TELEPORT_SELF_DENIED);
                                 return 0;
                             }
 
                             if (TeleportRequestManager.hasRequest(target)) {
-                                requester.sendMessage(HomeLinkMessages.prefix("That player already has a pending request."), false);
+                                HomeLinkMessages.PrivateMessage(requester, HomeLinkMessages.PLAYER_HAS_PENDING_REQUEST);
                                 return 0;
                             }
 
                             TeleportRequestManager.sendRequest(requester, target, RequestType.HERE);
 
-                            requester.sendMessage(HomeLinkMessages.prefix("Teleport request sent to " + target.getName().getString() + "."), false);
-                            target.sendMessage(HomeLinkMessages.prefix(requester.getName().getString() + " wants to teleport you to them. Type /teleportaccept " + requester.getName().getString() + " to accept."), false);
+                            HomeLinkMessages.PrivateMessage(requester, String.format(HomeLinkMessages.TELEPORT_REQUEST_SENT_TO, target.getName().getString()));
+                            HomeLinkMessages.PrivateMessage(target, String.format(HomeLinkMessages.TELEPORT_REQUEST_PROMPT_HERE, requester.getName().getString(), requester.getName().getString()));
 
                             return 1;
                         })

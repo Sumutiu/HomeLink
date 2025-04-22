@@ -14,7 +14,6 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import static com.sumutiu.homelink.HomeLink.LOGGER;
 
 import java.util.EnumSet;
 
@@ -33,7 +32,7 @@ public class TeleportAcceptCommand {
                         .executes(ctx -> {
                             ServerCommandSource source = ctx.getSource();
                             if (!(source.getEntity() instanceof ServerPlayerEntity target)) {
-                                LOGGER.warn("[HomeLink]: This command can only be used by players.");
+                                HomeLinkMessages.Logger(1, HomeLinkMessages.PLAYER_ONLY_COMMAND);
                                 return 0;
                             }
 
@@ -41,20 +40,20 @@ public class TeleportAcceptCommand {
 
                             MinecraftServer server = target.getServer();
                             if (server == null) {
-                                LOGGER.error("[HomeLink]: Server not available.");
+                                HomeLinkMessages.Logger(2, HomeLinkMessages.SERVER_NOT_AVAILABLE);
                                 return 0;
                             }
 
                             ServerPlayerEntity requester = server.getPlayerManager().getPlayer(requesterName);
 
                             if (requester == null) {
-                                target.sendMessage(HomeLinkMessages.prefix("Player '" + requesterName + "' not found."), false);
+                                HomeLinkMessages.PrivateMessage(target, String.format(HomeLinkMessages.PLAYER_NOT_FOUND, requesterName));
                                 return 0;
                             }
 
                             TeleportRequest request = TeleportRequestManager.getRequest(target);
                             if (request == null || !request.requesterId().equals(requester.getUuid())) {
-                                target.sendMessage(HomeLinkMessages.prefix("No pending request from '" + requesterName + "'."), false);
+                                HomeLinkMessages.PrivateMessage(target, String.format(HomeLinkMessages.NO_PENDING_REQUEST, requesterName));
                                 return 0;
                             }
 
@@ -62,8 +61,8 @@ public class TeleportAcceptCommand {
                             int delay = HomeLinkConfig.getTeleportDelay();
 
                             if (request.type() == RequestType.TO) {
-                                target.sendMessage(HomeLinkMessages.prefix("You accepted " + requester.getName().getString() + "'s teleport request."), false);
-                                requester.sendMessage(HomeLinkMessages.prefix("Teleporting to " + target.getName().getString() + " in " + delay + " seconds..."), false);
+                                HomeLinkMessages.PrivateMessage(target, String.format(HomeLinkMessages.TELEPORT_REQUEST_ACCEPTED, requester.getName().getString()));
+                                HomeLinkMessages.PrivateMessage(requester, String.format(HomeLinkMessages.TELEPORTING_TO_IN_SECONDS, target.getName().getString(), delay));
                                 TeleportScheduler.schedule(requester, delay, () -> {
                                     requester.teleport(
                                             (ServerWorld) target.getWorld(),
@@ -75,12 +74,13 @@ public class TeleportAcceptCommand {
                                             requester.getPitch(),
                                             false
                                     );
-                                    requester.sendMessage(HomeLinkMessages.prefix("You teleported to " + target.getName().getString() + "."), false);
-                                    target.sendMessage(HomeLinkMessages.prefix(requester.getName().getString() + " teleported to you."), false);
+                                    HomeLinkMessages.PrivateMessage(requester, String.format(HomeLinkMessages.YOU_TELEPORTED_TO_PLAYER, target.getName().getString()));
+                                    HomeLinkMessages.PrivateMessage(target, String.format(HomeLinkMessages.TELEPORTED_TO_YOU, requester.getName().getString()));
+                                    HomeLinkMessages.Logger(0, String.format(HomeLinkMessages.LOG_TELEPORTED, requester.getName().getString(), target.getName().getString()));
                                 });
                             } else {
-                                requester.sendMessage(HomeLinkMessages.prefix(target.getName().getString() + " accepted your teleport request."), false);
-                                target.sendMessage(HomeLinkMessages.prefix("Teleporting you to " + requester.getName().getString() + " in " + delay + " seconds..."), false);
+                                HomeLinkMessages.PrivateMessage(requester, String.format(HomeLinkMessages.TELEPORT_REQUEST_ACCEPTED_BY, target.getName().getString()));
+                                HomeLinkMessages.PrivateMessage(target, String.format(HomeLinkMessages.TELEPORTING_YOU_TO_IN_SECONDS, requester.getName().getString(), delay));
                                 TeleportScheduler.schedule(target, delay, () -> {
                                     target.teleport(
                                             (ServerWorld) requester.getWorld(),
@@ -92,8 +92,9 @@ public class TeleportAcceptCommand {
                                             target.getPitch(),
                                             false
                                     );
-                                    requester.sendMessage(HomeLinkMessages.prefix(target.getName().getString() + " was teleported to you."), false);
-                                    target.sendMessage(HomeLinkMessages.prefix("You teleported to " + requester.getName().getString() + "."), false);
+                                    HomeLinkMessages.PrivateMessage(requester, String.format(HomeLinkMessages.PLAYER_WAS_TELEPORTED_TO_YOU, target.getName().getString()));
+                                    HomeLinkMessages.PrivateMessage(target, String.format(HomeLinkMessages.YOU_TELEPORTED_TO_PLAYER, requester.getName().getString()));
+                                    HomeLinkMessages.Logger(0, String.format(HomeLinkMessages.LOG_PLAYER_WAS_TELEPORTED, target.getName().getString(), requester.getName().getString()));
                                 });
                             }
 

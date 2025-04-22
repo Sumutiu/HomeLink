@@ -17,8 +17,6 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
 
-import static com.sumutiu.homelink.HomeLink.LOGGER;
-
 import java.util.EnumSet;
 
 public class BackCommand {
@@ -27,19 +25,19 @@ public class BackCommand {
                 .executes(ctx -> {
                     ServerCommandSource source = ctx.getSource();
                     if (!(source.getEntity() instanceof ServerPlayerEntity player)) {
-                        LOGGER.warn("[HomeLink]: This command can only be used by players.");
+                        HomeLinkMessages.Logger(1, HomeLinkMessages.PLAYER_ONLY_COMMAND);
                         return 0;
                     }
 
                     BackData back = BackStorage.get(player);
                     if (back == null) {
-                        player.sendMessage(HomeLinkMessages.prefix("No previous location to return to."), false);
+                        HomeLinkMessages.PrivateMessage(player, HomeLinkMessages.NO_BACK_LOCATION);
                         return 0;
                     }
 
                     MinecraftServer server = player.getServer();
                     if (server == null) {
-                        LOGGER.error("[HomeLink]: Server not available.");
+                        HomeLinkMessages.Logger(2, HomeLinkMessages.SERVER_NOT_AVAILABLE);
                         return 0;
                     }
 
@@ -47,7 +45,7 @@ public class BackCommand {
                     ServerWorld targetWorld = server.getWorld(worldKey);
 
                     if (targetWorld == null) {
-                        player.sendMessage(HomeLinkMessages.prefix("Back location world not found: " + back.world), false);
+                        HomeLinkMessages.PrivateMessage(player, String.format(HomeLinkMessages.BACK_WORLD_NOT_FOUND, back.world));
                         return 0;
                     }
 
@@ -62,7 +60,7 @@ public class BackCommand {
                                 back.pitch,
                                 false
                         );
-                        player.sendMessage(HomeLinkMessages.prefix("Teleported back to your previous location."), false);
+                        HomeLinkMessages.PrivateMessage(player, HomeLinkMessages.BACK_TELEPORTED);
                     });
 
                     return 1;

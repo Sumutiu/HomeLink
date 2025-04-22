@@ -8,8 +8,6 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 
-import static com.sumutiu.homelink.HomeLink.LOGGER;
-
 public class DelHomeCommand {
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(CommandManager.literal("delhome")
@@ -18,7 +16,7 @@ public class DelHomeCommand {
                         .executes(ctx -> {
                             ServerCommandSource source = ctx.getSource();
                             if (!(source.getEntity() instanceof ServerPlayerEntity player)) {
-                                LOGGER.warn("[HomeLink]: This command can only be used by players.");
+                                HomeLinkMessages.Logger(1, HomeLinkMessages.PLAYER_ONLY_COMMAND);
                                 return 0;
                             }
 
@@ -26,10 +24,10 @@ public class DelHomeCommand {
 
                             if (HomeStorage.getHome(player, name) != null) {
                                 HomeStorage.deleteHome(player, name);
-                                player.sendMessage(HomeLinkMessages.prefix("Home '" + name + "' deleted."), false);
+                                HomeLinkMessages.PrivateMessage(player, String.format(HomeLinkMessages.HOME_DELETED, name));
                                 return 1;
                             } else {
-                                player.sendMessage(HomeLinkMessages.prefix("Home '" + name + "' not found."), false);
+                                HomeLinkMessages.PrivateMessage(player, String.format(HomeLinkMessages.HOME_NOT_FOUND, name));
                                 return 0;
                             }
                         })

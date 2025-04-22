@@ -9,8 +9,6 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 
-import static com.sumutiu.homelink.HomeLink.LOGGER;
-
 public class SetHomeCommand {
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(CommandManager.literal("sethome")
@@ -18,7 +16,7 @@ public class SetHomeCommand {
                         .executes(context -> {
                             ServerCommandSource source = context.getSource();
                             if (!(source.getEntity() instanceof ServerPlayerEntity player)) {
-                                LOGGER.warn("[HomeLink]: This command can only be used by players.");
+                                HomeLinkMessages.Logger(1, HomeLinkMessages.PLAYER_ONLY_COMMAND);
                                 return 0;
                             }
 
@@ -27,10 +25,9 @@ public class SetHomeCommand {
                             boolean success = HomeStorage.setHome(player, name, player.getBlockPos());
 
                             if (success) {
-                                player.sendMessage(HomeLinkMessages.prefix("Home '" + name + "' set at your current location."), false);
+                                HomeLinkMessages.PrivateMessage(player, String.format(HomeLinkMessages.HOME_SET_NAMED, name));
                             } else {
-                                player.sendMessage(HomeLinkMessages.prefix("You have reached the maximum number of homes (" +
-                                        HomeLinkConfig.getMaxHomes() + "). Delete one to set another."), false);
+                                HomeLinkMessages.PrivateMessage(player, String.format(HomeLinkMessages.HOME_LIMIT_REACHED, HomeLinkConfig.getMaxHomes()));
                             }
                             return success ? 1 : 0;
                         })

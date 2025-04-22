@@ -2,10 +2,9 @@ package com.sumutiu.homelink.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.sumutiu.homelink.util.HomeLinkMessages;
 
 import java.io.*;
-
-import static com.sumutiu.homelink.HomeLink.LOGGER;
 
 public class HomeLinkConfig {
 
@@ -34,7 +33,7 @@ public class HomeLinkConfig {
                         return;
                     }
                 } else {
-                    LOGGER.error("[HomeLink]: Config folder cannot be created in the HomeLink folder.");
+                    HomeLinkMessages.Logger(2, HomeLinkMessages.CONFIG_FOLDER_CREATION_FAILED);
                 }
             }
 
@@ -42,21 +41,21 @@ public class HomeLinkConfig {
                 ConfigData loaded = GSON.fromJson(reader, ConfigData.class);
                 if (loaded != null){
                     config = loaded;
-                    LOGGER.info("[HomeLink]: HomeLink mod initialized!");
+                    HomeLinkMessages.Logger(0, HomeLinkMessages.MOD_INITIALIZED);
                 }
             }
 
         } catch (IOException e) {
-            LOGGER.error("[HomeLink]: Failed to load HomeLink config: {}", e.getMessage());
+            HomeLinkMessages.Logger(2, String.format(HomeLinkMessages.CONFIG_LOAD_FAILED, e.getMessage()));
         }
     }
 
     public static void save() {
         try (Writer writer = new FileWriter(CONFIG_FILE)) {
             GSON.toJson(config, writer);
-            LOGGER.info("[HomeLink]: Default Config loaded. Please edit the default values in the HomeLink/Config folder.");
+            HomeLinkMessages.Logger(0, HomeLinkMessages.DEFAULT_CONFIG_LOADED);
         } catch (IOException e) {
-            LOGGER.error("[HomeLink]: Failed to save HomeLink config: {}", e.getMessage());
+            HomeLinkMessages.Logger(2, String.format(HomeLinkMessages.CONFIG_SAVE_FAILED, e.getMessage()));
         }
     }
 

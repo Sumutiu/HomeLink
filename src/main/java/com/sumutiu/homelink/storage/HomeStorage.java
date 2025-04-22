@@ -6,6 +6,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.sumutiu.homelink.config.HomeLinkConfig;
+import com.sumutiu.homelink.util.HomeLinkMessages;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
@@ -14,8 +15,6 @@ import java.io.*;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-
-import static com.sumutiu.homelink.HomeLink.LOGGER;
 
 public class HomeStorage {
     private static final Map<String, Map<String, HomeData>> homes = new HashMap<>();
@@ -34,7 +33,7 @@ public class HomeStorage {
                     homes.put(uuid, data);
                 }
             } catch (IOException e) {
-                LOGGER.error("[HomeLink]: Failed to load homes for {}.", uuid, e);
+                HomeLinkMessages.Logger(2, String.format(HomeLinkMessages.HOME_LOAD_FAILED, uuid, e));
             }
         } else {
             homes.put(uuid, new HashMap<>());
@@ -48,9 +47,9 @@ public class HomeStorage {
         try {
             if (!STORAGE_FOLDER.exists()) {
                 if (STORAGE_FOLDER.mkdirs()) {
-                    LOGGER.info("[HomeLink]: Main mod folder has been created.");
+                    HomeLinkMessages.Logger(0, HomeLinkMessages.MAIN_FOLDER_CREATED);
                 } else {
-                    LOGGER.error("[HomeLink]: Failed to create the main mod folder.");
+                    HomeLinkMessages.Logger(2, HomeLinkMessages.MAIN_FOLDER_CREATION_FAILED);
                 }
             }
 
@@ -58,7 +57,7 @@ public class HomeStorage {
                 GSON.toJson(homes.getOrDefault(uuid, new HashMap<>()), writer);
             }
         } catch (IOException e) {
-            LOGGER.error("[HomeLink]: Failed to save homes for {}.", uuid, e);
+            HomeLinkMessages.Logger(2, String.format(HomeLinkMessages.HOME_SAVE_FAILED, uuid, e));
         }
     }
 

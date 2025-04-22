@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.*;
 
-import static com.sumutiu.homelink.HomeLink.LOGGER;
+// This handles request lifetimes.
 
 public class TeleportRequestManager {
 
@@ -26,7 +26,7 @@ public class TeleportRequestManager {
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1, runnable -> {
         Thread thread = new Thread(runnable);
         thread.setDaemon(true); // Allows server shutdown
-        thread.setName("HomeLink-TeleportRequestScheduler");
+        thread.setName(HomeLinkMessages.Mod_ID + " - " + HomeLinkMessages.MANAGER_SERVICE_NAME);
         return thread;
     });
 
@@ -40,14 +40,9 @@ public class TeleportRequestManager {
 
         scheduler.schedule(() -> {
             if (activeRequests.remove(targetId) != null) {
-                requester.sendMessage(
-                        HomeLinkMessages.prefix("Teleport request to " + target.getName().getString() + " timed out."),
-                        false
-                );
-                target.sendMessage(
-                        HomeLinkMessages.prefix("Teleport request from " + requester.getName().getString() + " timed out."),
-                        false
-                );
+                HomeLinkMessages.PrivateMessage(requester, String.format(HomeLinkMessages.TELEPORT_REQUEST_TO_TIMEOUT, target.getName().getString()));
+                HomeLinkMessages.PrivateMessage(target, String.format(HomeLinkMessages.TELEPORT_REQUEST_FROM_TIMEOUT, requester.getName().getString()));
+                HomeLinkMessages.Logger(0, String.format(HomeLinkMessages.LOG_TELEPORT_TIMEOUT, requester.getName().getString(), target.getName().getString()));
             }
         }, timeoutSeconds, TimeUnit.SECONDS);
     }
@@ -81,9 +76,9 @@ public class TeleportRequestManager {
     public static void shutdown() {
         try {
             scheduler.shutdownNow();
-            LOGGER.info("[HomeLink]: TeleportRequestManager scheduler has been shut down.");
+            HomeLinkMessages.Logger(0, HomeLinkMessages.TELEPORT_REQUEST_MANAGER_SHUTDOWN);
         } catch (Exception e) {
-            LOGGER.error("[HomeLink]: Failed to shut down TeleportRequestManager scheduler: {}", e.getMessage());
+            HomeLinkMessages.Logger(2, String.format(HomeLinkMessages.TELEPORT_REQUEST_MANAGER_SHUTDOWN_FAILED, e.getMessage()));
         }
     }
 }

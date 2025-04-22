@@ -14,16 +14,17 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.*;
 
-import static com.sumutiu.homelink.HomeLink.LOGGER;
+// This handles active teleports
 
 public class TeleportScheduler {
 
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1, runnable -> {
         Thread thread = new Thread(runnable);
         thread.setDaemon(true);
-        thread.setName("HomeLink-TeleportScheduler");
+        thread.setName(HomeLinkMessages.Mod_ID + " - " + HomeLinkMessages.SCHEDULER_SERVICE_NAME);
         return thread;
     });
+
     private static final Map<UUID, BlockPos> teleportPositions = new ConcurrentHashMap<>();
     private static final Set<UUID> activeTeleports = ConcurrentHashMap.newKeySet();
 
@@ -31,7 +32,7 @@ public class TeleportScheduler {
         UUID uuid = player.getUuid();
 
         if (isTeleporting(player)) {
-            player.sendMessage(HomeLinkMessages.prefix("You already have a teleport in progress."), false);
+            HomeLinkMessages.PrivateMessage(player, HomeLinkMessages.TELEPORT_IN_PROGRESS);
             return;
         }
 
@@ -46,14 +47,14 @@ public class TeleportScheduler {
         BlockPos initialPos = player.getBlockPos();
         teleportPositions.put(uuid, initialPos);
 
-        player.sendMessage(HomeLinkMessages.prefix("Teleporting in " + delaySeconds + " seconds..."), false);
+        HomeLinkMessages.PrivateMessage(player, String.format(HomeLinkMessages.TELEPORT_DELAY_MESSAGE, delaySeconds));
 
         scheduler.schedule(() -> {
             boolean cancelOnMove = HomeLinkConfig.getCancelOnMove();
             BlockPos currentPos = player.getBlockPos();
 
             if (cancelOnMove && !currentPos.equals(teleportPositions.get(uuid))) {
-                player.sendMessage(HomeLinkMessages.prefix("Teleport cancelled due to movement."), false);
+                HomeLinkMessages.PrivateMessage(player, HomeLinkMessages.TELEPORT_CANCELLED_MOVEMENT);
             } else {
                 BackStorage.save(player, player.getBlockPos());
                 teleportTask.run();
@@ -95,9 +96,9 @@ public class TeleportScheduler {
     public static void shutdown() {
         try {
             scheduler.shutdownNow();
-            LOGGER.info("[HomeLink]: TeleportScheduler has been shut down.");
+            HomeLinkMessages.Logger(0, HomeLinkMessages.TELEPORT_SCHEDULER_SHUTDOWN);
         } catch (Exception e) {
-            LOGGER.error("[HomeLink]: Failed to shut down TeleportScheduler: {}", e.getMessage());
+            HomeLinkMessages.Logger(2, String.format(HomeLinkMessages.TELEPORT_SCHEDULER_SHUTDOWN_FAILED, e.getMessage()));
         }
     }
 }

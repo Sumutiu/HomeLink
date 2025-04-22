@@ -10,8 +10,6 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 
-import static com.sumutiu.homelink.HomeLink.LOGGER;
-
 public class TeleportDenyCommand {
 
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
@@ -26,7 +24,7 @@ public class TeleportDenyCommand {
                         .executes(ctx -> {
                             ServerCommandSource source = ctx.getSource();
                             if (!(source.getEntity() instanceof ServerPlayerEntity target)) {
-                                LOGGER.warn("[HomeLink]: This command can only be used by players.");
+                                HomeLinkMessages.Logger(1, HomeLinkMessages.PLAYER_ONLY_COMMAND);
                                 return 0;
                             }
 
@@ -34,26 +32,26 @@ public class TeleportDenyCommand {
 
                             MinecraftServer server = target.getServer();
                             if (server == null) {
-                                LOGGER.error("[HomeLink]: Server not available.");
+                                HomeLinkMessages.Logger(2, HomeLinkMessages.SERVER_NOT_AVAILABLE);
                                 return 0;
                             }
 
                             ServerPlayerEntity requester = server.getPlayerManager().getPlayer(requesterName);
                             if (requester == null) {
-                                target.sendMessage(HomeLinkMessages.prefix("Player '" + requesterName + "' not found."), false);
+                                HomeLinkMessages.PrivateMessage(target, String.format(HomeLinkMessages.PLAYER_NOT_FOUND, requesterName));
                                 return 0;
                             }
 
                             TeleportRequest request = TeleportRequestManager.getRequest(target);
                             if (request == null || !request.requesterId().equals(requester.getUuid())) {
-                                target.sendMessage(HomeLinkMessages.prefix("No pending request from '" + requesterName + "'."), false);
+                                HomeLinkMessages.PrivateMessage(target, String.format(HomeLinkMessages.NO_PENDING_REQUEST, requesterName));
                                 return 0;
                             }
 
                             TeleportRequestManager.clearRequest(target);
 
-                            target.sendMessage(HomeLinkMessages.prefix("Denied teleport request from " + requester.getName().getString() + "."), false);
-                            requester.sendMessage(HomeLinkMessages.prefix("Your teleport request to " + target.getName().getString() + " was denied."), false);
+                            HomeLinkMessages.PrivateMessage(target, String.format(HomeLinkMessages.TELEPORT_REQUEST_DENIED_FROM, requester.getName().getString()));
+                            HomeLinkMessages.PrivateMessage(requester, String.format(HomeLinkMessages.TELEPORT_REQUEST_DENIED_TO, target.getName().getString()));
 
                             return 1;
                         })
