@@ -5,6 +5,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.sumutiu.homelink.teleport.TeleportRequestManager;
 import com.sumutiu.homelink.teleport.TeleportRequestManager.RequestType;
 import com.sumutiu.homelink.util.HomeLinkMessages;
+import net.minecraft.command.CommandSource;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
@@ -17,6 +18,15 @@ public class TeleportToCommand {
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(CommandManager.literal("teleportto")
                 .then(CommandManager.argument("target", StringArgumentType.word())
+                        .suggests((context, builder) -> {
+                            MinecraftServer server = context.getSource().getServer();
+                            if (server != null) {
+                                return CommandSource.suggestMatching(
+                                        server.getPlayerNames(), builder
+                                );
+                            }
+                            return builder.buildFuture();
+                        })
                         .executes(ctx -> {
                             ServerCommandSource source = ctx.getSource();
                             if (!(source.getEntity() instanceof ServerPlayerEntity requester)) {

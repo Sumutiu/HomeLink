@@ -1,10 +1,14 @@
 package com.sumutiu.homelink.teleport;
 
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.sumutiu.homelink.config.HomeLinkConfig;
 import com.sumutiu.homelink.util.HomeLinkMessages;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 
-import java.util.*;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.*;
 
 import static com.sumutiu.homelink.HomeLink.LOGGER;
@@ -12,16 +16,16 @@ import static com.sumutiu.homelink.HomeLink.LOGGER;
 public class TeleportRequestManager {
 
     public enum RequestType {
-        TO, HERE
+        TO,
+        HERE
     }
 
-    public record TeleportRequest(UUID requesterId, RequestType type) { }
+    public record TeleportRequest(UUID requesterId, RequestType type) {}
 
-    private static final Map<UUID, TeleportRequest> pendingRequests = new HashMap<>();
-    private static final Map<UUID, ScheduledFuture<?>> expirationTasks = new HashMap<>();
+    private static final Map<UUID, TeleportRequest> activeRequests = new ConcurrentHashMap<>();
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1, runnable -> {
         Thread thread = new Thread(runnable);
-        thread.setDaemon(true);
+        thread.setDaemon(true); // Allows server shutdown
         thread.setName("HomeLink-TeleportRequestScheduler");
         return thread;
     });
@@ -30,49 +34,56 @@ public class TeleportRequestManager {
         UUID targetId = target.getUuid();
         UUID requesterId = requester.getUuid();
 
-        pendingRequests.put(targetId, new TeleportRequest(requesterId, type));
+        activeRequests.put(targetId, new TeleportRequest(requesterId, type));
 
-        // Cancel existing expiration task for the target (if any)
-        if (expirationTasks.containsKey(targetId)) {
-            expirationTasks.get(targetId).cancel(false);
-        }
+        int timeoutSeconds = HomeLinkConfig.getTeleportAcceptDelay();
 
-        int timeout = HomeLinkConfig.getTeleportAcceptDelay();
-
-        // Schedule expiration
-        ScheduledFuture<?> task = scheduler.schedule(() -> {
-            pendingRequests.remove(targetId);
-            expirationTasks.remove(targetId);
-            target.sendMessage(HomeLinkMessages.prefix("Teleport request from " + requester.getName().getString() + " expired."), false);
-            requester.sendMessage(HomeLinkMessages.prefix("Your teleport request to " + target.getName().getString() + " expired."), false);
-        }, timeout, TimeUnit.SECONDS);
-
-        expirationTasks.put(targetId, task);
-    }
-
-    public static TeleportRequest getRequest(ServerPlayerEntity target) {
-        return pendingRequests.get(target.getUuid());
-    }
-
-    public static void clearRequest(ServerPlayerEntity target) {
-        UUID targetId = target.getUuid();
-        pendingRequests.remove(targetId);
-        if (expirationTasks.containsKey(targetId)) {
-            expirationTasks.get(targetId).cancel(false);
-            expirationTasks.remove(targetId);
-        }
+        scheduler.schedule(() -> {
+            if (activeRequests.remove(targetId) != null) {
+                requester.sendMessage(
+                        HomeLinkMessages.prefix("Teleport request to " + target.getName().getString() + " timed out."),
+                        false
+                );
+                target.sendMessage(
+                        HomeLinkMessages.prefix("Teleport request from " + requester.getName().getString() + " timed out."),
+                        false
+                );
+            }
+        }, timeoutSeconds, TimeUnit.SECONDS);
     }
 
     public static boolean hasRequest(ServerPlayerEntity target) {
-        return pendingRequests.containsKey(target.getUuid());
+        return activeRequests.containsKey(target.getUuid());
+    }
+
+    public static TeleportRequest getRequest(ServerPlayerEntity target) {
+        return activeRequests.get(target.getUuid());
+    }
+
+    public static void clearRequest(ServerPlayerEntity target) {
+        activeRequests.remove(target.getUuid());
+    }
+
+    public static CompletableFuture<Suggestions> suggestPendingRequestNames(ServerPlayerEntity target, SuggestionsBuilder builder) {
+        TeleportRequest request = activeRequests.get(target.getUuid());
+        if (request != null) {
+            MinecraftServer server = target.getServer();
+            if (server != null) {
+                ServerPlayerEntity requester = server.getPlayerManager().getPlayer(request.requesterId());
+                if (requester != null) {
+                    builder.suggest(requester.getName().getString());
+                }
+            }
+        }
+        return builder.buildFuture();
     }
 
     public static void shutdown() {
         try {
             scheduler.shutdownNow();
-            LOGGER.info("[HomeLink]: TeleportRequestManager has been shut down.");
+            LOGGER.info("[HomeLink]: TeleportRequestManager scheduler has been shut down.");
         } catch (Exception e) {
-            LOGGER.error("[HomeLink]: Failed to shut down TeleportRequestManager: {}", e.getMessage());
+            LOGGER.error("[HomeLink]: Failed to shut down TeleportRequestManager scheduler: {}", e.getMessage());
         }
     }
 }

@@ -2,7 +2,11 @@ package com.sumutiu.homelink.util;
 
 import com.sumutiu.homelink.config.HomeLinkConfig;
 import com.sumutiu.homelink.storage.BackStorage;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 
 import java.util.Map;
@@ -53,6 +57,29 @@ public class TeleportScheduler {
             } else {
                 BackStorage.save(player, player.getBlockPos());
                 teleportTask.run();
+
+                player.getWorld().playSound(
+                        null,
+                        player.getX(),
+                        player.getY(),
+                        player.getZ(),
+                        SoundEvents.ENTITY_ENDERMAN_TELEPORT,
+                        SoundCategory.PLAYERS,
+                        1.0f,
+                        1.0f
+                );
+
+                ((ServerWorld) player.getWorld()).spawnParticles(
+                        ParticleTypes.PORTAL,
+                        player.getX(),
+                        player.getY() + 1,
+                        player.getZ(),
+                        32,     // count
+                        0.5,    // offset X
+                        0.5,    // offset Y
+                        0.5,    // offset Z
+                        0.2     // speed
+                );
             }
 
             teleportPositions.remove(uuid);

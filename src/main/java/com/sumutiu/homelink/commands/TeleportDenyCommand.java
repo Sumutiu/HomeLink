@@ -17,6 +17,12 @@ public class TeleportDenyCommand {
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(CommandManager.literal("teleportdeny")
                 .then(CommandManager.argument("name", StringArgumentType.word())
+                        .suggests((context, builder) -> {
+                            if (!(context.getSource().getEntity() instanceof ServerPlayerEntity target)) {
+                                return builder.buildFuture();
+                            }
+                            return TeleportRequestManager.suggestPendingRequestNames(target, builder);
+                        })
                         .executes(ctx -> {
                             ServerCommandSource source = ctx.getSource();
                             if (!(source.getEntity() instanceof ServerPlayerEntity target)) {

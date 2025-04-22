@@ -23,6 +23,13 @@ public class TeleportAcceptCommand {
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(CommandManager.literal("teleportaccept")
                 .then(CommandManager.argument("name", StringArgumentType.word())
+                        .suggests((context, builder) -> {
+                            if (!(context.getSource().getEntity() instanceof ServerPlayerEntity target)) {
+                                return builder.buildFuture();
+                            }
+
+                            return TeleportRequestManager.suggestPendingRequestNames(target, builder);
+                        })
                         .executes(ctx -> {
                             ServerCommandSource source = ctx.getSource();
                             if (!(source.getEntity() instanceof ServerPlayerEntity target)) {
@@ -55,7 +62,7 @@ public class TeleportAcceptCommand {
                             int delay = HomeLinkConfig.getTeleportDelay();
 
                             if (request.type() == RequestType.TO) {
-                                target.sendMessage(HomeLinkMessages.prefix(requester.getName().getString() + " accepted your teleport request."), false);
+                                target.sendMessage(HomeLinkMessages.prefix("You accepted " + requester.getName().getString() + "'s teleport request."), false);
                                 requester.sendMessage(HomeLinkMessages.prefix("Teleporting to " + target.getName().getString() + " in " + delay + " seconds..."), false);
                                 TeleportScheduler.schedule(requester, delay, () -> {
                                     requester.teleport(

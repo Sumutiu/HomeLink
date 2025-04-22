@@ -17,6 +17,13 @@ public class TeleportHereCommand {
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(CommandManager.literal("teleporthere")
                 .then(CommandManager.argument("target", StringArgumentType.word())
+                        .suggests((context, builder) -> {
+                            MinecraftServer server = context.getSource().getServer();
+                            if (server != null) {
+                                return net.minecraft.command.CommandSource.suggestMatching(server.getPlayerNames(), builder);
+                            }
+                            return builder.buildFuture();
+                        })
                         .executes(ctx -> {
                             ServerCommandSource source = ctx.getSource();
                             if (!(source.getEntity() instanceof ServerPlayerEntity requester)) {
