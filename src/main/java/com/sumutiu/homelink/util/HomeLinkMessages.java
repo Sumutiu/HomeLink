@@ -14,6 +14,7 @@ public class HomeLinkMessages {
     public static final String MANAGER_SERVICE_NAME = "[TeleportRequestManager]";
     public static final String MOD_INITIALIZED = "HomeLink mod has been successfully initialized!";
     public static final String SERVER_NOT_AVAILABLE = "Server not available.";
+    public static final String INVALID_CONNECTION_HANDLER = "Invalid connection handler or player during join event.";
     public static final String PLAYER_ONLY_COMMAND = "This command can only be used by players.";
 
     // Configuration

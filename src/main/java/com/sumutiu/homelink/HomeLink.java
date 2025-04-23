@@ -34,6 +34,12 @@ public class HomeLink implements ModInitializer {
 			TeleportDenyCommand.register(dispatcher);
 		});
 
-		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> HomeStorage.loadPlayerHomes(handler.getPlayer()));
+		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+			if (handler != null && handler.getPlayer() != null) {
+				HomeStorage.loadPlayerHomes(handler.getPlayer());
+			} else {
+				HomeLinkMessages.Logger(2, HomeLinkMessages.INVALID_CONNECTION_HANDLER);
+			}
+		});
 	}
 }
