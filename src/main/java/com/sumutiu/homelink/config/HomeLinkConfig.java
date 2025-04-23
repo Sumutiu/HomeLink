@@ -41,7 +41,7 @@ public class HomeLinkConfig {
                 ConfigData loaded = GSON.fromJson(reader, ConfigData.class);
                 if (loaded != null){
                     config = loaded;
-                    HomeLinkMessages.Logger(0, HomeLinkMessages.MOD_INITIALIZED);
+                    HomeLinkMessages.logAsciiBanner(HomeLinkMessages.MOD_ASCII_BANNER, "[HomeLink]: V" + HomeLinkMessages.getModVersion() + " - Teleport with style!");
                 }
             }
 

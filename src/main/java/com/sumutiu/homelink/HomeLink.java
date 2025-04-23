@@ -32,6 +32,7 @@ public class HomeLink implements ModInitializer {
 			TeleportHereCommand.register(dispatcher);
 			TeleportAcceptCommand.register(dispatcher);
 			TeleportDenyCommand.register(dispatcher);
+			AboutCommand.register(dispatcher);
 		});
 
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {

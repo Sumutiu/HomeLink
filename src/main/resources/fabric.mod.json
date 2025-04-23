@@ -3,7 +3,7 @@
 	"id": "homelink",
 	"version": "${version}",
 	"name": "HomeLink",
-	"description": "Teleportation mod with homes and back functionality",
+	"description": "Teleport with style! Teleportation mod with homes and back functionality.",
 	"authors": [
 		"Me!"
 	],
