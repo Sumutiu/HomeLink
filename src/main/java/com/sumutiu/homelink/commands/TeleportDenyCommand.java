@@ -52,6 +52,7 @@ public class TeleportDenyCommand {
 
                             HomeLinkMessages.PrivateMessage(target, String.format(HomeLinkMessages.TELEPORT_REQUEST_DENIED_FROM, requester.getName().getString()));
                             HomeLinkMessages.PrivateMessage(requester, String.format(HomeLinkMessages.TELEPORT_REQUEST_DENIED_TO, target.getName().getString()));
+                            HomeLinkMessages.Logger(0, String.format(HomeLinkMessages.LOG_TELEPORT_REQUEST_DENIED,requester.getName().getString(), target.getName().getString()));
 
                             return 1;
                         })

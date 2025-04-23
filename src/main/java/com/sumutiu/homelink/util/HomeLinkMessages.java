@@ -68,6 +68,7 @@ public class HomeLinkMessages {
     public static final String TELEPORT_REQUEST_TO_TIMEOUT = "Teleport request to %s timed out.";
     public static final String TELEPORT_REQUEST_FROM_TIMEOUT = "Teleport request from %s timed out.";
     public static final String LOG_TELEPORT_TIMEOUT = "Teleport request from %s to %s timed out.";
+    public static final String LOG_TELEPORT_REQUEST_DENIED = "Teleport request from %s to %s has been denied.";
 
     // Back Command
     public static final String NO_BACK_LOCATION = "No previous location to return to.";
