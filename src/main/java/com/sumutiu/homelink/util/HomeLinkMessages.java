@@ -12,7 +12,7 @@ public class HomeLinkMessages {
     public static final String Mod_ID = "[HomeLink]";
     public static final String SCHEDULER_SERVICE_NAME = "[TeleportScheduler]";
     public static final String MANAGER_SERVICE_NAME = "[TeleportRequestManager]";
-    public static final String MOD_INITIALIZED = "HomeLink mod initialized!";
+    public static final String MOD_INITIALIZED = "HomeLink mod has been successfully initialized!";
     public static final String SERVER_NOT_AVAILABLE = "Server not available.";
     public static final String PLAYER_ONLY_COMMAND = "This command can only be used by players.";
 
