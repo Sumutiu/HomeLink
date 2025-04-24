@@ -43,6 +43,8 @@ public class HomeLinkMessages {
     public static final String TELEPORT_DELAY_MESSAGE = "Teleporting in %d seconds...";
     public static final String TELEPORT_CANCELLED_MOVEMENT = "Teleport cancelled due to movement.";
     public static final String TELEPORT_CANCELLED_DAMAGED = "Teleport cancelled due to damage.";
+    public static final String TELEPORT_CANCELLED_CANCEL = "Teleport cancelled on your request.";
+    public static final String TELEPORT_CANCEL_QUEUED = "Teleport is being cancelled...";
 
     // Teleportation - Scheduling
     public static final String TELEPORT_SCHEDULER_SHUTDOWN = "TeleportScheduler has been shut down.";
@@ -56,11 +58,12 @@ public class HomeLinkMessages {
     public static final String PLAYER_NOT_FOUND = "Player has not been found: %s";
     public static final String PLAYER_HAS_PENDING_REQUEST = "That player already has a pending request.";
     public static final String NO_PENDING_REQUEST = "No pending request from: %s";
+    public static final String NO_PENDING_TELEPORT = "No pending teleport to cancel.";
 
     // Teleportation - Requests (Send)
     public static final String TELEPORT_REQUEST_SENT_TO = "Teleport request sent to: %s";
-    public static final String TELEPORT_REQUEST_PROMPT_HERE = "%s wants to teleport you to them. Type /teleportaccept %s to accept.";
-    public static final String TELEPORT_REQUEST_PROMPT_TO = "%s wants to teleport to you. Type /teleportaccept %s within time to accept.";
+    public static final String TELEPORT_REQUEST_PROMPT_HERE = "%s wants to teleport you to them. Type /tpaccept %s to accept.";
+    public static final String TELEPORT_REQUEST_PROMPT_TO = "%s wants to teleport to you. Type /tpaccept %s within time to accept.";
 
     // Teleportation - Accepted
     public static final String TELEPORT_REQUEST_ACCEPTED = "You accepted the teleport request from: %s";

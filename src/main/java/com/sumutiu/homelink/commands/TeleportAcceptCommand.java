@@ -20,7 +20,7 @@ import java.util.EnumSet;
 public class TeleportAcceptCommand {
 
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
-        dispatcher.register(CommandManager.literal("teleportaccept")
+        dispatcher.register(CommandManager.literal("tpaccept")
                 .then(CommandManager.argument("name", StringArgumentType.word())
                         .suggests((context, builder) -> {
                             if (!(context.getSource().getEntity() instanceof ServerPlayerEntity target)) {

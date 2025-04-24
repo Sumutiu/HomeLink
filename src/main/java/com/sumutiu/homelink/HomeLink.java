@@ -23,7 +23,7 @@ public class HomeLink implements ModInitializer {
 			TeleportRequestManager.shutdown();
 		});
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
-			if (entity instanceof ServerPlayerEntity player) { TeleportScheduler.cancelTeleportDueToDamage(player); }
+			if (entity instanceof ServerPlayerEntity player) { TeleportScheduler.cancelPlayerTeleportOnDamage(player); }
 			return true;
 		});
 
@@ -34,6 +34,7 @@ public class HomeLink implements ModInitializer {
 			DelHomeCommand.register(dispatcher);
 			HomeCommand.register(dispatcher);
 			BackCommand.register(dispatcher);
+			CancelCommand.register(dispatcher);
 			TeleportToCommand.register(dispatcher);
 			TeleportHereCommand.register(dispatcher);
 			TeleportAcceptCommand.register(dispatcher);
@@ -41,11 +42,8 @@ public class HomeLink implements ModInitializer {
 		});
 
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-			if (handler != null && handler.getPlayer() != null) {
-				HomeStorage.loadPlayerHomes(handler.getPlayer());
-			} else {
-				HomeLinkMessages.Logger(2, HomeLinkMessages.INVALID_CONNECTION_HANDLER);
-			}
+			if (handler != null && handler.getPlayer() != null) { HomeStorage.loadPlayerHomes(handler.getPlayer()); }
+			else { HomeLinkMessages.Logger(2, HomeLinkMessages.INVALID_CONNECTION_HANDLER); }
 		});
 	}
 }

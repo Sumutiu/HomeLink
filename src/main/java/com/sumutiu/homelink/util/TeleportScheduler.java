@@ -27,7 +27,8 @@ public class TeleportScheduler {
 
     private static final Map<UUID, BlockPos> teleportPositions = new ConcurrentHashMap<>();
     private static final Set<UUID> activeTeleports = ConcurrentHashMap.newKeySet();
-    private static final Set<UUID> damagedPlayers = ConcurrentHashMap.newKeySet();
+    private static final Set<UUID> cancelTeleportsOnDamage = ConcurrentHashMap.newKeySet();
+    private static final Set<UUID> cancelTeleportsOnCancel = ConcurrentHashMap.newKeySet();
 
     public static void schedule(ServerPlayerEntity player, int delaySeconds, Runnable teleportTask) {
         UUID uuid = player.getUuid();
@@ -56,9 +57,12 @@ public class TeleportScheduler {
 
             if (cancelOnMove && !currentPos.equals(teleportPositions.get(uuid))) {
                 HomeLinkMessages.PrivateMessage(player, HomeLinkMessages.TELEPORT_CANCELLED_MOVEMENT);
-            } else if (damagedPlayers.contains(uuid)) {
+            } else if (cancelTeleportsOnDamage.contains(uuid)) {
                 HomeLinkMessages.PrivateMessage(player, HomeLinkMessages.TELEPORT_CANCELLED_DAMAGED);
-                damagedPlayers.remove(uuid);
+                cancelTeleportsOnDamage.remove(uuid);
+            } else if (cancelTeleportsOnCancel.contains(uuid)) {
+                HomeLinkMessages.PrivateMessage(player, HomeLinkMessages.TELEPORT_CANCELLED_CANCEL);
+                cancelTeleportsOnCancel.remove(uuid);
             } else {
                 BackStorage.save(player, player.getBlockPos());
                 teleportTask.run();
@@ -97,8 +101,15 @@ public class TeleportScheduler {
         return activeTeleports.contains(player.getUuid());
     }
 
-    public static void cancelTeleportDueToDamage(ServerPlayerEntity player) {
-        if (isTeleporting(player)) { damagedPlayers.add(player.getUuid()); }
+    public static void cancelPlayerTeleportOnDamage(ServerPlayerEntity player) {
+        if (TeleportScheduler.isTeleporting(player)) { cancelTeleportsOnDamage.add(player.getUuid()); }
+    }
+
+    public static void cancelPlayerTeleportOnCancel(ServerPlayerEntity player) {
+        if (TeleportScheduler.isTeleporting(player)) {
+            cancelTeleportsOnCancel.add(player.getUuid());
+            HomeLinkMessages.PrivateMessage(player, HomeLinkMessages.TELEPORT_CANCEL_QUEUED);
+        } else { HomeLinkMessages.PrivateMessage(player, HomeLinkMessages.NO_PENDING_TELEPORT); }
     }
 
     public static void shutdown() {

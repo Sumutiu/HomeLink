@@ -13,7 +13,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 public class TeleportHereCommand {
 
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
-        dispatcher.register(CommandManager.literal("teleporthere")
+        dispatcher.register(CommandManager.literal("tphere")
                 .then(CommandManager.argument("target", StringArgumentType.word())
                         .suggests((context, builder) -> {
                             MinecraftServer server = context.getSource().getServer();

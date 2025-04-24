@@ -13,7 +13,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 public class TeleportDenyCommand {
 
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
-        dispatcher.register(CommandManager.literal("teleportdeny")
+        dispatcher.register(CommandManager.literal("tpdeny")
                 .then(CommandManager.argument("name", StringArgumentType.word())
                         .suggests((context, builder) -> {
                             if (!(context.getSource().getEntity() instanceof ServerPlayerEntity target)) {

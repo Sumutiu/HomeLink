@@ -21,7 +21,7 @@ import java.util.EnumSet;
 
 public class BackCommand {
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
-        dispatcher.register(CommandManager.literal("back")
+        dispatcher.register(CommandManager.literal("tpback")
                 .executes(ctx -> {
                     ServerCommandSource source = ctx.getSource();
                     if (!(source.getEntity() instanceof ServerPlayerEntity player)) {

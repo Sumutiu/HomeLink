@@ -14,7 +14,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 public class TeleportToCommand {
 
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
-        dispatcher.register(CommandManager.literal("teleportto")
+        dispatcher.register(CommandManager.literal("tpto")
                 .then(CommandManager.argument("target", StringArgumentType.word())
                         .suggests((context, builder) -> {
                             MinecraftServer server = context.getSource().getServer();
