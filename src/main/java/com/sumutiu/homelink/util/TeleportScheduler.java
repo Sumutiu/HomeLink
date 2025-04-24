@@ -27,6 +27,7 @@ public class TeleportScheduler {
 
     private static final Map<UUID, BlockPos> teleportPositions = new ConcurrentHashMap<>();
     private static final Set<UUID> activeTeleports = ConcurrentHashMap.newKeySet();
+    private static final Set<UUID> damagedPlayers = ConcurrentHashMap.newKeySet();
 
     public static void schedule(ServerPlayerEntity player, int delaySeconds, Runnable teleportTask) {
         UUID uuid = player.getUuid();
@@ -55,6 +56,9 @@ public class TeleportScheduler {
 
             if (cancelOnMove && !currentPos.equals(teleportPositions.get(uuid))) {
                 HomeLinkMessages.PrivateMessage(player, HomeLinkMessages.TELEPORT_CANCELLED_MOVEMENT);
+            } else if (damagedPlayers.contains(uuid)) {
+                HomeLinkMessages.PrivateMessage(player, HomeLinkMessages.TELEPORT_CANCELLED_DAMAGED);
+                damagedPlayers.remove(uuid);
             } else {
                 BackStorage.save(player, player.getBlockPos());
                 teleportTask.run();
@@ -91,6 +95,10 @@ public class TeleportScheduler {
 
     public static boolean isTeleporting(ServerPlayerEntity player) {
         return activeTeleports.contains(player.getUuid());
+    }
+
+    public static void cancelTeleportDueToDamage(ServerPlayerEntity player) {
+        if (isTeleporting(player)) { damagedPlayers.add(player.getUuid()); }
     }
 
     public static void shutdown() {

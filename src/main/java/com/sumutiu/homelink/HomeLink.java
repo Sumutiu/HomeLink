@@ -9,8 +9,10 @@ import com.sumutiu.homelink.util.TeleportScheduler;
 import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.server.network.ServerPlayerEntity;
 
 public class HomeLink implements ModInitializer {
 	@Override
@@ -19,6 +21,10 @@ public class HomeLink implements ModInitializer {
 			HomeLinkMessages.Logger(0, HomeLinkMessages.SHUTTING_DOWN_SCHEDULERS);
 			TeleportScheduler.shutdown();
 			TeleportRequestManager.shutdown();
+		});
+		ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
+			if (entity instanceof ServerPlayerEntity player) { TeleportScheduler.cancelTeleportDueToDamage(player); }
+			return true;
 		});
 
 		HomeLinkConfig.load();
@@ -32,7 +38,6 @@ public class HomeLink implements ModInitializer {
 			TeleportHereCommand.register(dispatcher);
 			TeleportAcceptCommand.register(dispatcher);
 			TeleportDenyCommand.register(dispatcher);
-			AboutCommand.register(dispatcher);
 		});
 
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {

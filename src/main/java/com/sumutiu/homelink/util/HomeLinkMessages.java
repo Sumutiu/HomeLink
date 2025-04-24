@@ -42,6 +42,7 @@ public class HomeLinkMessages {
     public static final String TELEPORT_IN_PROGRESS = "You already have a teleport in progress.";
     public static final String TELEPORT_DELAY_MESSAGE = "Teleporting in %d seconds...";
     public static final String TELEPORT_CANCELLED_MOVEMENT = "Teleport cancelled due to movement.";
+    public static final String TELEPORT_CANCELLED_DAMAGED = "Teleport cancelled due to damage.";
 
     // Teleportation - Scheduling
     public static final String TELEPORT_SCHEDULER_SHUTDOWN = "TeleportScheduler has been shut down.";
@@ -128,12 +129,5 @@ public class HomeLinkMessages {
         LOGGER.info(""); // Empty line before
         LOGGER.info(footer);
         LOGGER.info(""); // Empty line after
-    }
-
-    public static void sendModInfoToPlayer(ServerPlayerEntity player) {
-        player.sendMessage(Text.literal(""));
-        player.sendMessage(Text.literal("======= [ HomeLink ] =======").styled(s -> s.withColor(Formatting.AQUA)), false);
-        player.sendMessage(Text.literal("V" + getModVersion() + " - Teleport with style!").styled(s -> s.withColor(Formatting.GRAY)), false);
-        player.sendMessage(Text.literal(""));
     }
 }
