@@ -20,9 +20,9 @@ public class TeleportRequestManager {
         HERE
     }
 
-    public record TeleportRequest(UUID requesterId, RequestType type) {}
+    public record TeleportRequest(UUID requesterId, RequestType type) { }
 
-    private static final Map<UUID, TeleportRequest> activeRequests = new ConcurrentHashMap<>();
+    public static final Map<UUID, TeleportRequest> activeRequests = new ConcurrentHashMap<>();
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1, runnable -> {
         Thread thread = new Thread(runnable);
         thread.setDaemon(true); // Allows server shutdown
@@ -55,8 +55,9 @@ public class TeleportRequestManager {
         return activeRequests.get(target.getUuid());
     }
 
-    public static void clearRequest(ServerPlayerEntity target) {
-        activeRequests.remove(target.getUuid());
+    public static void clearRequest(UUID playerId) {
+        activeRequests.remove(playerId); // If player is the target
+        activeRequests.entrySet().removeIf(entry -> entry.getValue().requesterId().equals(playerId)); // If player is the requester
     }
 
     public static CompletableFuture<Suggestions> suggestPendingRequestNames(ServerPlayerEntity target, SuggestionsBuilder builder) {

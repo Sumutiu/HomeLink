@@ -7,6 +7,7 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.sumutiu.homelink.config.HomeLinkConfig;
 import com.sumutiu.homelink.util.HomeLinkMessages;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
@@ -21,6 +22,13 @@ public class HomeStorage {
     private static final File STORAGE_FOLDER = new File("mods/HomeLink");
     private static final Gson GSON = new Gson();
     private static final Type TYPE = new TypeToken<Map<String, HomeData>>() {}.getType();
+
+    public static void initialize() {
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            if (handler != null && handler.getPlayer() != null) { loadPlayerHomes(handler.getPlayer()); }
+            else { HomeLinkMessages.Logger(2, HomeLinkMessages.INVALID_CONNECTION_HANDLER); }
+        });
+    }
 
     public static void loadPlayerHomes(ServerPlayerEntity player) {
         String uuid = player.getUuidAsString();

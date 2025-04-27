@@ -57,13 +57,13 @@ public class TeleportAcceptCommand {
                                 return 0;
                             }
 
-                            TeleportRequestManager.clearRequest(target);
+                            TeleportRequestManager.clearRequest(target.getUuid());
                             int delay = HomeLinkConfig.getTeleportDelay();
 
                             if (request.type() == RequestType.TO) {
                                 HomeLinkMessages.PrivateMessage(target, String.format(HomeLinkMessages.TELEPORT_REQUEST_ACCEPTED, requester.getName().getString()));
                                 HomeLinkMessages.PrivateMessage(requester, String.format(HomeLinkMessages.TELEPORTING_TO_IN_SECONDS, target.getName().getString(), delay));
-                                TeleportScheduler.schedule(requester, delay, () -> {
+                                TeleportScheduler.schedule(requester, target, delay, () -> {
                                     requester.teleport(
                                             (ServerWorld) target.getWorld(),
                                             target.getX() + 0.5,
@@ -76,12 +76,15 @@ public class TeleportAcceptCommand {
                                     );
                                     HomeLinkMessages.PrivateMessage(requester, String.format(HomeLinkMessages.YOU_TELEPORTED_TO_PLAYER, target.getName().getString()));
                                     HomeLinkMessages.PrivateMessage(target, String.format(HomeLinkMessages.TELEPORTED_TO_YOU, requester.getName().getString()));
-                                    HomeLinkMessages.Logger(0, String.format(HomeLinkMessages.LOG_TELEPORTED, requester.getName().getString(), target.getName().getString()));
+
+                                    if (requester.isAlive() && target.isAlive()) {
+                                        HomeLinkMessages.Logger(0, String.format(HomeLinkMessages.LOG_TELEPORTED, requester.getName().getString(), target.getName().getString()));
+                                    }
                                 });
                             } else {
                                 HomeLinkMessages.PrivateMessage(requester, String.format(HomeLinkMessages.TELEPORT_REQUEST_ACCEPTED_BY, target.getName().getString()));
                                 HomeLinkMessages.PrivateMessage(target, String.format(HomeLinkMessages.TELEPORTING_YOU_TO_IN_SECONDS, requester.getName().getString(), delay));
-                                TeleportScheduler.schedule(target, delay, () -> {
+                                TeleportScheduler.schedule(target, requester, delay, () -> {
                                     target.teleport(
                                             (ServerWorld) requester.getWorld(),
                                             requester.getX() + 0.5,
@@ -94,8 +97,12 @@ public class TeleportAcceptCommand {
                                     );
                                     HomeLinkMessages.PrivateMessage(requester, String.format(HomeLinkMessages.PLAYER_WAS_TELEPORTED_TO_YOU, target.getName().getString()));
                                     HomeLinkMessages.PrivateMessage(target, String.format(HomeLinkMessages.YOU_TELEPORTED_TO_PLAYER, requester.getName().getString()));
-                                    HomeLinkMessages.Logger(0, String.format(HomeLinkMessages.LOG_PLAYER_WAS_TELEPORTED, target.getName().getString(), requester.getName().getString()));
+
+                                    if (requester.isAlive() && target.isAlive()) {
+                                        HomeLinkMessages.Logger(0, String.format(HomeLinkMessages.LOG_PLAYER_WAS_TELEPORTED, target.getName().getString(), requester.getName().getString()));
+                                    }
                                 });
+
                             }
 
 

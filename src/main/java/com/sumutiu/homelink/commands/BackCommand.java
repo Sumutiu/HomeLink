@@ -49,7 +49,7 @@ public class BackCommand {
                         return 0;
                     }
 
-                    TeleportScheduler.schedule(player, HomeLinkConfig.getBackDelay(), () -> {
+                    TeleportScheduler.schedule(player, null, HomeLinkConfig.getBackDelay(), () -> {
                         player.teleport(
                                 targetWorld,
                                 back.pos.getX() + 0.5,

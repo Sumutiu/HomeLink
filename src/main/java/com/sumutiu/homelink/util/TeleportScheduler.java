@@ -2,6 +2,9 @@ package com.sumutiu.homelink.util;
 
 import com.sumutiu.homelink.config.HomeLinkConfig;
 import com.sumutiu.homelink.storage.BackStorage;
+import com.sumutiu.homelink.teleport.TeleportRequestManager;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -14,8 +17,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.*;
 
-// This handles active teleports
-
 public class TeleportScheduler {
 
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1, runnable -> {
@@ -25,75 +26,93 @@ public class TeleportScheduler {
         return thread;
     });
 
+    public static void initialize() {
+        // Cleanup when a player disconnects
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            ServerPlayerEntity player = handler.getPlayer();
+            if (player != null) { dataCleanup(player.getUuid()); }
+        });
+
+        // Cancel teleport if player takes damage
+        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
+            if (entity instanceof ServerPlayerEntity player) { cancelPlayerTeleportOnDamage(player); }
+            return true;
+        });
+    }
+
     private static final Map<UUID, BlockPos> teleportPositions = new ConcurrentHashMap<>();
     private static final Set<UUID> activeTeleports = ConcurrentHashMap.newKeySet();
     private static final Set<UUID> cancelTeleportsOnDamage = ConcurrentHashMap.newKeySet();
     private static final Set<UUID> cancelTeleportsOnCancel = ConcurrentHashMap.newKeySet();
 
-    public static void schedule(ServerPlayerEntity player, int delaySeconds, Runnable teleportTask) {
-        UUID uuid = player.getUuid();
+    public static void schedule(ServerPlayerEntity teleportedPlayer, ServerPlayerEntity targetPlayer, int delaySeconds, Runnable teleportTask) {
+        UUID teleportedPlayerUUID = teleportedPlayer != null ? teleportedPlayer.getUuid() : null;
 
-        if (isTeleporting(player)) {
-            HomeLinkMessages.PrivateMessage(player, HomeLinkMessages.TELEPORT_IN_PROGRESS);
+        if (teleportedPlayer != null && isTeleporting(teleportedPlayer)) {
+            HomeLinkMessages.PrivateMessage(teleportedPlayer, HomeLinkMessages.TELEPORT_IN_PROGRESS);
+            activeTeleports.add(teleportedPlayerUUID);
             return;
         }
-
-        activeTeleports.add(uuid);
 
         if (delaySeconds <= 0) {
             teleportTask.run();
-            activeTeleports.remove(uuid);
+            activeTeleports.remove(teleportedPlayerUUID);
             return;
         }
 
-        BlockPos initialPos = player.getBlockPos();
-        teleportPositions.put(uuid, initialPos);
-
-        HomeLinkMessages.PrivateMessage(player, String.format(HomeLinkMessages.TELEPORT_DELAY_MESSAGE, delaySeconds));
+        if (teleportedPlayer != null) {
+            BlockPos initialPos = teleportedPlayer.getBlockPos();
+            teleportPositions.put(teleportedPlayerUUID, initialPos);
+            HomeLinkMessages.PrivateMessage(teleportedPlayer, String.format(HomeLinkMessages.TELEPORT_DELAY_MESSAGE, delaySeconds));
+        }
 
         scheduler.schedule(() -> {
-            boolean cancelOnMove = HomeLinkConfig.getCancelOnMove();
-            BlockPos currentPos = player.getBlockPos();
+            boolean teleportValid = HomeLinkMessages.isConnected(teleportedPlayer);
+            boolean targetStillConnected = targetPlayer == null || HomeLinkMessages.isConnected(targetPlayer);
 
-            if (cancelOnMove && !currentPos.equals(teleportPositions.get(uuid))) {
-                HomeLinkMessages.PrivateMessage(player, HomeLinkMessages.TELEPORT_CANCELLED_MOVEMENT);
-            } else if (cancelTeleportsOnDamage.contains(uuid)) {
-                HomeLinkMessages.PrivateMessage(player, HomeLinkMessages.TELEPORT_CANCELLED_DAMAGED);
-                cancelTeleportsOnDamage.remove(uuid);
-            } else if (cancelTeleportsOnCancel.contains(uuid)) {
-                HomeLinkMessages.PrivateMessage(player, HomeLinkMessages.TELEPORT_CANCELLED_CANCEL);
-                cancelTeleportsOnCancel.remove(uuid);
+            if (!teleportValid || !targetStillConnected) {
+                if (HomeLinkMessages.isConnected(targetPlayer)) {
+                    HomeLinkMessages.PrivateMessage(targetPlayer, HomeLinkMessages.TELEPORT_CANCELLED_DISCONNECT);
+                }
+                if (HomeLinkMessages.isConnected(teleportedPlayer)) {
+                    HomeLinkMessages.PrivateMessage(teleportedPlayer, HomeLinkMessages.TELEPORT_CANCELLED_DISCONNECT);
+                }
             } else {
-                BackStorage.save(player, player.getBlockPos());
-                teleportTask.run();
+                BlockPos currentPos = teleportedPlayer.getBlockPos();
+                boolean cancelOnMove = HomeLinkConfig.getCancelOnMove();
 
-                player.getWorld().playSound(
-                        null,
-                        player.getX(),
-                        player.getY(),
-                        player.getZ(),
-                        SoundEvents.ENTITY_ENDERMAN_TELEPORT,
-                        SoundCategory.PLAYERS,
-                        1.0f,
-                        1.0f
-                );
+                if (cancelOnMove && !currentPos.equals(teleportPositions.get(teleportedPlayerUUID))) {
+                    HomeLinkMessages.PrivateMessage(teleportedPlayer, HomeLinkMessages.TELEPORT_CANCELLED_MOVEMENT);
+                } else if (cancelTeleportsOnDamage.remove(teleportedPlayerUUID)) {
+                    HomeLinkMessages.PrivateMessage(teleportedPlayer, HomeLinkMessages.TELEPORT_CANCELLED_DAMAGED);
+                } else if (cancelTeleportsOnCancel.remove(teleportedPlayerUUID)) {
+                    HomeLinkMessages.PrivateMessage(teleportedPlayer, HomeLinkMessages.TELEPORT_CANCELLED_CANCEL);
+                } else {
+                    // Successful teleport
+                    BackStorage.save(teleportedPlayer, teleportedPlayer.getBlockPos());
+                    teleportTask.run();
 
-                ((ServerWorld) player.getWorld()).spawnParticles(
-                        ParticleTypes.PORTAL,
-                        player.getX(),
-                        player.getY() + 1,
-                        player.getZ(),
-                        32,     // count
-                        0.5,    // offset X
-                        0.5,    // offset Y
-                        0.5,    // offset Z
-                        0.2     // speed
-                );
+                    teleportedPlayer.getWorld().playSound(
+                            null,
+                            teleportedPlayer.getX(),
+                            teleportedPlayer.getY(),
+                            teleportedPlayer.getZ(),
+                            SoundEvents.ENTITY_ENDERMAN_TELEPORT,
+                            SoundCategory.PLAYERS,
+                            1.0f,
+                            1.0f
+                    );
+
+                    ((ServerWorld) teleportedPlayer.getWorld()).spawnParticles(
+                            ParticleTypes.PORTAL,
+                            teleportedPlayer.getX(),
+                            teleportedPlayer.getY() + 1,
+                            teleportedPlayer.getZ(),
+                            32, 0.5, 0.5, 0.5, 0.2
+                    );
+                }
             }
-
-            teleportPositions.remove(uuid);
-            activeTeleports.remove(uuid);
-
+            dataCleanup(teleportedPlayerUUID);
         }, delaySeconds, TimeUnit.SECONDS);
     }
 
@@ -102,14 +121,26 @@ public class TeleportScheduler {
     }
 
     public static void cancelPlayerTeleportOnDamage(ServerPlayerEntity player) {
-        if (TeleportScheduler.isTeleporting(player)) { cancelTeleportsOnDamage.add(player.getUuid()); }
+        if (isTeleporting(player)) {
+            cancelTeleportsOnDamage.add(player.getUuid());
+        }
     }
 
     public static void cancelPlayerTeleportOnCancel(ServerPlayerEntity player) {
-        if (TeleportScheduler.isTeleporting(player)) {
+        if (isTeleporting(player)) {
             cancelTeleportsOnCancel.add(player.getUuid());
             HomeLinkMessages.PrivateMessage(player, HomeLinkMessages.TELEPORT_CANCEL_QUEUED);
-        } else { HomeLinkMessages.PrivateMessage(player, HomeLinkMessages.NO_PENDING_TELEPORT); }
+        } else {
+            HomeLinkMessages.PrivateMessage(player, HomeLinkMessages.NO_PENDING_TELEPORT);
+        }
+    }
+
+    private static void dataCleanup(UUID playerId) {
+        teleportPositions.remove(playerId);
+        activeTeleports.remove(playerId);
+        cancelTeleportsOnDamage.remove(playerId);
+        cancelTeleportsOnCancel.remove(playerId);
+        TeleportRequestManager.clearRequest(playerId);
     }
 
     public static void shutdown() {

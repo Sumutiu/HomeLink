@@ -79,7 +79,7 @@ public class HomeCommand {
             return 0;
         }
 
-        TeleportScheduler.schedule(player, HomeLinkConfig.getHomeDelay(), () -> {
+        TeleportScheduler.schedule(player, null, HomeLinkConfig.getHomeDelay(), () -> {
             player.teleport(
                     targetWorld,
                     home.position.getX() + 0.5,

@@ -48,7 +48,7 @@ public class TeleportDenyCommand {
                                 return 0;
                             }
 
-                            TeleportRequestManager.clearRequest(target);
+                            TeleportRequestManager.clearRequest(target.getUuid());
 
                             HomeLinkMessages.PrivateMessage(target, String.format(HomeLinkMessages.TELEPORT_REQUEST_DENIED_FROM, requester.getName().getString()));
                             HomeLinkMessages.PrivateMessage(requester, String.format(HomeLinkMessages.TELEPORT_REQUEST_DENIED_TO, target.getName().getString()));

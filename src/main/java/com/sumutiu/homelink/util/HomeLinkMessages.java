@@ -44,6 +44,7 @@ public class HomeLinkMessages {
     public static final String TELEPORT_CANCELLED_MOVEMENT = "Teleport cancelled due to movement.";
     public static final String TELEPORT_CANCELLED_DAMAGED = "Teleport cancelled due to damage.";
     public static final String TELEPORT_CANCELLED_CANCEL = "Teleport cancelled on your request.";
+    public static final String TELEPORT_CANCELLED_DISCONNECT = "Teleport cancelled. Player disconnected.";
     public static final String TELEPORT_CANCEL_QUEUED = "Teleport is being cancelled...";
 
     // Teleportation - Scheduling
@@ -102,9 +103,11 @@ public class HomeLinkMessages {
     private static final Logger LOGGER = LoggerFactory.getLogger(Mod_ID);
 
     public static void PrivateMessage(ServerPlayerEntity player, String message) {
-        player.sendMessage(Text.literal(Mod_ID + ": ")
-                .styled(style -> style.withColor(Formatting.GREEN))
-                .append(Text.literal(message).styled(s -> s.withColor(Formatting.WHITE))), false);
+        if (isConnected(player)) {
+            player.sendMessage(Text.literal(Mod_ID + ": ")
+                    .styled(style -> style.withColor(Formatting.GREEN))
+                    .append(Text.literal(message).styled(s -> s.withColor(Formatting.WHITE))), false);
+        }
     }
 
     public static void Logger(int type, String message) {
@@ -122,6 +125,12 @@ public class HomeLinkMessages {
                 .map(ModContainer::getMetadata)
                 .map(meta -> meta.getVersion().getFriendlyString())
                 .orElse("unknown");
+    }
+
+    public static boolean isConnected(ServerPlayerEntity player) {
+        return player != null
+                && player.getServer() != null
+                && player.getServer().getPlayerManager().getPlayer(player.getUuid()) == player;
     }
 
     public static void logAsciiBanner(String banner, String footer) {
