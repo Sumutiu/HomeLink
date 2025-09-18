@@ -6,7 +6,8 @@ import com.sumutiu.homelink.util.HomeLinkMessages;
 
 import java.io.*;
 
-import static com.sumutiu.homelink.HomeLink.*;
+import static com.sumutiu.homelink.HomeLink.CONFIG_FILE;
+import static com.sumutiu.homelink.util.HomeLinkMessages.*;
 
 public class HomeLinkConfig {
 
@@ -26,10 +27,12 @@ public class HomeLinkConfig {
     public static boolean save() {
         try (Writer writer = new FileWriter(CONFIG_FILE.toFile())) {
             GSON.toJson(new ConfigData(), writer);
-            HomeLinkMessages.Logger(0, HomeLinkMessages.DEFAULT_CONFIG_LOADED);
+            // This message is not ideal, but we are not allowed to add new messages.
+            // It is logged when a new default configuration is created.
+            Logger(0, DEFAULT_CONFIG_LOADED);
             return true;
         } catch (IOException e) {
-            HomeLinkMessages.Logger(2, String.format(HomeLinkMessages.CONFIG_SAVE_FAILED, e.getMessage()));
+            Logger(2, String.format(CONFIG_SAVE_FAILED, e.getMessage()));
             return false;
         }
     }
@@ -39,14 +42,16 @@ public class HomeLinkConfig {
             ConfigData loaded = GSON.fromJson(reader, ConfigData.class);
             if (loaded != null) {
                 config = loaded;
-                HomeLinkMessages.Logger(0, HomeLinkMessages.CONFIG_LOADED);
+                Logger(0, CONFIG_LOADED);
             } else {
-                HomeLinkMessages.Logger(1, HomeLinkMessages.CONFIG_LOAD_FAILED_MALFORMED);
+                // The config file is present but malformed. Log a warning and load default settings.
+                // The mod will not be prevented from starting, to avoid start-up failures for a misconfigured mod.
+                Logger(1, CONFIG_LOAD_FAILED_MALFORMED);
                 config = new ConfigData();
             }
             return true;
         } catch (IOException e) {
-            HomeLinkMessages.Logger(2, String.format(HomeLinkMessages.CONFIG_LOAD_FAILED, e.getMessage()));
+            Logger(2, String.format(CONFIG_LOAD_FAILED, e.getMessage()));
             return false;
         }
     }

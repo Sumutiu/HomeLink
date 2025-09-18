@@ -27,7 +27,7 @@ public class HomeLink implements ModInitializer {
 	public void onInitialize() {
 		if (initPlugin()) {
 			ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
-				HomeLinkMessages.Logger(0, HomeLinkMessages.SHUTTING_DOWN_SCHEDULERS);
+				Logger(0, SHUTTING_DOWN_SCHEDULERS);
 				TeleportScheduler.shutdown();
 				TeleportRequestManager.shutdown();
 			});
@@ -66,10 +66,10 @@ public class HomeLink implements ModInitializer {
 		try {
 			if (Files.notExists(STORAGE_FOLDER)) {
 				Files.createDirectories(STORAGE_FOLDER);
-				Logger(0, HomeLinkMessages.MAIN_FOLDER_CREATED);
+				Logger(0, MAIN_FOLDER_CREATED);
 			}
 		} catch (IOException e) {
-			Logger(2, HomeLinkMessages.MAIN_FOLDER_CREATION_FAILED);
+			Logger(2, MAIN_FOLDER_CREATION_FAILED);
 			return false;
 		}
 
