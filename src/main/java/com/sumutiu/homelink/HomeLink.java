@@ -4,7 +4,6 @@ import com.sumutiu.homelink.commands.*;
 import com.sumutiu.homelink.config.HomeLinkConfig;
 import com.sumutiu.homelink.storage.HomeStorage;
 import com.sumutiu.homelink.teleport.TeleportRequestManager;
-import com.sumutiu.homelink.util.HomeLinkMessages;
 import com.sumutiu.homelink.util.TeleportScheduler;
 import net.fabricmc.api.ModInitializer;
 

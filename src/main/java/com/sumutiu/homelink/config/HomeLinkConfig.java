@@ -2,7 +2,6 @@ package com.sumutiu.homelink.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.sumutiu.homelink.util.HomeLinkMessages;
 
 import java.io.*;
 
