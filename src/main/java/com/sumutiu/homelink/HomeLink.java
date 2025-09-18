@@ -11,7 +11,6 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,7 +21,7 @@ public class HomeLink implements ModInitializer {
 
 	public static final Path CONFIG_FOLDER = Path.of("config", "HomeLink");
 	public static final Path CONFIG_FILE = CONFIG_FOLDER.resolve("HomeLink.json");
-	public static final File STORAGE_FOLDER = new File("mods/HomeLink");
+	public static final Path STORAGE_FOLDER = Path.of("mods", "HomeLink");
 
 	@Override
 	public void onInitialize() {
@@ -64,13 +63,14 @@ public class HomeLink implements ModInitializer {
 			return false;
 		}
 
-		if (!STORAGE_FOLDER.exists()) {
-			if (STORAGE_FOLDER.mkdirs()) {
-				HomeLinkMessages.Logger(0, HomeLinkMessages.MAIN_FOLDER_CREATED);
-			} else {
-				HomeLinkMessages.Logger(2, HomeLinkMessages.MAIN_FOLDER_CREATION_FAILED);
-				return false;
+		try {
+			if (Files.notExists(STORAGE_FOLDER)) {
+				Files.createDirectories(STORAGE_FOLDER);
+				Logger(0, HomeLinkMessages.MAIN_FOLDER_CREATED);
 			}
+		} catch (IOException e) {
+			Logger(2, HomeLinkMessages.MAIN_FOLDER_CREATION_FAILED);
+			return false;
 		}
 
 		if (Files.notExists(CONFIG_FILE)) {

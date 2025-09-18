@@ -37,7 +37,7 @@ public class HomeStorage {
 
     public static void loadPlayerHomes(ServerPlayerEntity player) {
         String uuid = player.getUuidAsString();
-        File file = new File(STORAGE_FOLDER, uuid + ".json");
+        File file = new File(STORAGE_FOLDER.toFile(), uuid + ".json");
 
         if (file.exists()) {
             try (Reader reader = new FileReader(file)) {
@@ -55,7 +55,7 @@ public class HomeStorage {
 
     public static void savePlayerHomes(ServerPlayerEntity player) {
         String uuid = player.getUuidAsString();
-        File file = new File(STORAGE_FOLDER, uuid + ".json");
+        File file = new File(STORAGE_FOLDER.toFile(), uuid + ".json");
 
         try (Writer writer = new FileWriter(file)) {
             GSON.toJson(homes.getOrDefault(uuid, new HashMap<>()), writer);
