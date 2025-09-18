@@ -6,10 +6,9 @@ import com.sumutiu.homelink.util.HomeLinkMessages;
 
 import java.io.*;
 
-public class HomeLinkConfig {
+import static com.sumutiu.homelink.HomeLink.*;
 
-    private static final File CONFIG_FOLDER = new File("config/HomeLink");
-    private static final File CONFIG_FILE = new File(CONFIG_FOLDER, "HomeLink.json");
+public class HomeLinkConfig {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
@@ -24,38 +23,23 @@ public class HomeLinkConfig {
 
     private static ConfigData config = new ConfigData();
 
-    public static void load() {
-        try {
-            if (!CONFIG_FOLDER.exists()) {
-                if (CONFIG_FOLDER.mkdirs()) {
-                    if (!CONFIG_FILE.exists()) {
-                        save(); // write default config
-                        return;
-                    }
-                } else {
-                    HomeLinkMessages.Logger(2, HomeLinkMessages.CONFIG_FOLDER_CREATION_FAILED);
-                }
-            }
-
-            try (Reader reader = new FileReader(CONFIG_FILE)) {
+    public static boolean save() {
+        try (Writer writer = new FileWriter(CONFIG_FILE.toFile())) {
+            GSON.toJson(config, writer);
+            HomeLinkMessages.Logger(0, HomeLinkMessages.DEFAULT_CONFIG_LOADED);
+            try (Reader reader = new FileReader(CONFIG_FILE.toFile())) {
                 ConfigData loaded = GSON.fromJson(reader, ConfigData.class);
                 if (loaded != null){
                     config = loaded;
-                    HomeLinkMessages.logAsciiBanner(HomeLinkMessages.MOD_ASCII_BANNER, "[HomeLink]: V" + HomeLinkMessages.getModVersion() + " - Teleport with style!");
                 }
+            } catch (IOException e) {
+                HomeLinkMessages.Logger(2, String.format(HomeLinkMessages.CONFIG_LOAD_FAILED, e.getMessage()));
+                return false;
             }
-
-        } catch (IOException e) {
-            HomeLinkMessages.Logger(2, String.format(HomeLinkMessages.CONFIG_LOAD_FAILED, e.getMessage()));
-        }
-    }
-
-    public static void save() {
-        try (Writer writer = new FileWriter(CONFIG_FILE)) {
-            GSON.toJson(config, writer);
-            HomeLinkMessages.Logger(0, HomeLinkMessages.DEFAULT_CONFIG_LOADED);
+            return true;
         } catch (IOException e) {
             HomeLinkMessages.Logger(2, String.format(HomeLinkMessages.CONFIG_SAVE_FAILED, e.getMessage()));
+            return false;
         }
     }
 

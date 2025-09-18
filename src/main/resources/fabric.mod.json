@@ -5,13 +5,9 @@
 	"name": "HomeLink",
 	"description": "Teleport with style! Teleportation mod with homes and back functionality.",
 	"authors": [
-		"Me!"
+		"Sumutiu"
 	],
-	"contact": {
-		"homepage": "https://github.com/Sumutiu",
-		"sources": "https://github.com/Sumutiu/HomeLink"
-	},
-	"license": "CC0-1.0",
+	"license": "AGPL-3.0",
 	"icon": "assets/homelink/HomeLink.png",
 	"environment": "*",
 	"entrypoints": {

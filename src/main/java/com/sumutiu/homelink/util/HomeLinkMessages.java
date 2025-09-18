@@ -27,7 +27,7 @@ public class HomeLinkMessages {
     public static final String PLAYER_ONLY_COMMAND = "This command can only be used by players.";
 
     // Configuration
-    public static final String CONFIG_FOLDER_CREATION_FAILED = "Config folder cannot be created in the HomeLink folder.";
+    public static final String MOD_INIT_FAILED = "Mod has failed to initialize. Error in creating the mod folder.";
     public static final String CONFIG_LOAD_FAILED = "Failed to load HomeLink config: %s";
     public static final String CONFIG_SAVE_FAILED = "Failed to save HomeLink config: %s";
     public static final String DEFAULT_CONFIG_LOADED = "Default Config loaded. Please edit the default values in the HomeLink/Config folder.";

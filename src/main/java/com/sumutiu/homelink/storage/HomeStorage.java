@@ -17,9 +17,10 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
+import static com.sumutiu.homelink.HomeLink.*;
+
 public class HomeStorage {
     private static final Map<String, Map<String, HomeData>> homes = new HashMap<>();
-    private static final File STORAGE_FOLDER = new File("mods/HomeLink");
     private static final Gson GSON = new Gson();
     private static final Type TYPE = new TypeToken<Map<String, HomeData>>() {}.getType();
 
@@ -52,18 +53,8 @@ public class HomeStorage {
         String uuid = player.getUuidAsString();
         File file = new File(STORAGE_FOLDER, uuid + ".json");
 
-        try {
-            if (!STORAGE_FOLDER.exists()) {
-                if (STORAGE_FOLDER.mkdirs()) {
-                    HomeLinkMessages.Logger(0, HomeLinkMessages.MAIN_FOLDER_CREATED);
-                } else {
-                    HomeLinkMessages.Logger(2, HomeLinkMessages.MAIN_FOLDER_CREATION_FAILED);
-                }
-            }
-
-            try (Writer writer = new FileWriter(file)) {
-                GSON.toJson(homes.getOrDefault(uuid, new HashMap<>()), writer);
-            }
+        try (Writer writer = new FileWriter(file)) {
+            GSON.toJson(homes.getOrDefault(uuid, new HashMap<>()), writer);
         } catch (IOException e) {
             HomeLinkMessages.Logger(2, String.format(HomeLinkMessages.HOME_SAVE_FAILED, uuid, e));
         }
