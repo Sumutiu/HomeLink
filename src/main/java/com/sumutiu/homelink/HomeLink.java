@@ -74,8 +74,10 @@ public class HomeLink implements ModInitializer {
 		}
 
 		if (Files.notExists(CONFIG_FILE)) {
-            return HomeLinkConfig.save();
+			if (!HomeLinkConfig.save()) {
+				return false;
+			}
 		}
-        return true;
-    }
+		return HomeLinkConfig.load();
+	}
 }

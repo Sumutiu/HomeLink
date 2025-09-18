@@ -25,20 +25,28 @@ public class HomeLinkConfig {
 
     public static boolean save() {
         try (Writer writer = new FileWriter(CONFIG_FILE.toFile())) {
-            GSON.toJson(config, writer);
+            GSON.toJson(new ConfigData(), writer);
             HomeLinkMessages.Logger(0, HomeLinkMessages.DEFAULT_CONFIG_LOADED);
-            try (Reader reader = new FileReader(CONFIG_FILE.toFile())) {
-                ConfigData loaded = GSON.fromJson(reader, ConfigData.class);
-                if (loaded != null){
-                    config = loaded;
-                }
-            } catch (IOException e) {
-                HomeLinkMessages.Logger(2, String.format(HomeLinkMessages.CONFIG_LOAD_FAILED, e.getMessage()));
-                return false;
-            }
             return true;
         } catch (IOException e) {
             HomeLinkMessages.Logger(2, String.format(HomeLinkMessages.CONFIG_SAVE_FAILED, e.getMessage()));
+            return false;
+        }
+    }
+
+    public static boolean load() {
+        try (Reader reader = new FileReader(CONFIG_FILE.toFile())) {
+            ConfigData loaded = GSON.fromJson(reader, ConfigData.class);
+            if (loaded != null) {
+                config = loaded;
+                HomeLinkMessages.Logger(0, HomeLinkMessages.CONFIG_LOADED);
+            } else {
+                HomeLinkMessages.Logger(1, HomeLinkMessages.CONFIG_LOAD_FAILED_MALFORMED);
+                config = new ConfigData();
+            }
+            return true;
+        } catch (IOException e) {
+            HomeLinkMessages.Logger(2, String.format(HomeLinkMessages.CONFIG_LOAD_FAILED, e.getMessage()));
             return false;
         }
     }

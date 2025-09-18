@@ -28,7 +28,9 @@ public class HomeLinkMessages {
 
     // Configuration
     public static final String MOD_INIT_FAILED = "Mod has failed to initialize. Error in creating the mod folder.";
+    public static final String CONFIG_LOADED = "Successfully loaded configuration.";
     public static final String CONFIG_LOAD_FAILED = "Failed to load HomeLink config: %s";
+    public static final String CONFIG_LOAD_FAILED_MALFORMED = "Failed to load configuration due to malformed JSON. Loading default settings.";
     public static final String CONFIG_SAVE_FAILED = "Failed to save HomeLink config: %s";
     public static final String DEFAULT_CONFIG_LOADED = "Default Config loaded. Please edit the default values in the HomeLink/Config folder.";
 

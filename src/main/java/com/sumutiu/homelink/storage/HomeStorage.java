@@ -29,6 +29,10 @@ public class HomeStorage {
             if (handler != null && handler.getPlayer() != null) { loadPlayerHomes(handler.getPlayer()); }
             else { HomeLinkMessages.Logger(2, HomeLinkMessages.INVALID_CONNECTION_HANDLER); }
         });
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            if (handler != null && handler.getPlayer() != null) { savePlayerHomes(handler.getPlayer()); }
+            else { HomeLinkMessages.Logger(2, HomeLinkMessages.INVALID_CONNECTION_HANDLER); }
+        });
     }
 
     public static void loadPlayerHomes(ServerPlayerEntity player) {
