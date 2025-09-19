@@ -50,7 +50,7 @@ public class HomeLink implements ModInitializer {
 	}
 
 	private static boolean initPlugin() {
-		logAsciiBanner(MOD_ASCII_BANNER, "[HomeLink]: V" + getModVersion() + " - Teleport with style!");
+		logAsciiBanner(MOD_ASCII_BANNER, Mod_ID + ": V" + getModVersion() + " - Teleport with style!");
 
 		try {
 			if (Files.notExists(CONFIG_FOLDER)) {
