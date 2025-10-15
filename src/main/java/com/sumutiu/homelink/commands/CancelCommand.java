@@ -3,7 +3,6 @@ package com.sumutiu.homelink.commands;
 import com.mojang.brigadier.CommandDispatcher;
 import com.sumutiu.homelink.util.HomeLinkMessages;
 import com.sumutiu.homelink.util.TeleportScheduler;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;

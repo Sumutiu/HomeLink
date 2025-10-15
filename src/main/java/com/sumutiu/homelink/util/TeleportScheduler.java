@@ -11,7 +11,6 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 
 import java.util.Map;
 import java.util.Set;
@@ -93,9 +92,9 @@ public class TeleportScheduler {
                     BackStorage.save(teleportedPlayer, teleportedPlayer.getBlockPos());
                     teleportTask.run();
 
-                    World world = teleportedPlayer.getEntityWorld();
+                    ServerWorld world = teleportedPlayer.getEntityWorld();
                     if(world instanceof ServerWorld){
-                        ((ServerWorld) world).playSound(
+                        world.playSound(
                                 null,
                                 teleportedPlayer.getX(),
                                 teleportedPlayer.getY(),
@@ -106,7 +105,7 @@ public class TeleportScheduler {
                                 1.0f
                         );
 
-                        ((ServerWorld) world).spawnParticles(
+                        world.spawnParticles(
                                 ParticleTypes.PORTAL,
                                 teleportedPlayer.getX(),
                                 teleportedPlayer.getY() + 1,

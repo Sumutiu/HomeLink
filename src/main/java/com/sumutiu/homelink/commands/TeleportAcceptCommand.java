@@ -13,7 +13,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
 
 import java.util.EnumSet;
 
@@ -65,7 +64,7 @@ public class TeleportAcceptCommand {
                                 HomeLinkMessages.PrivateMessage(requester, String.format(HomeLinkMessages.TELEPORTING_TO_IN_SECONDS, target.getName().getString(), delay));
                                 TeleportScheduler.schedule(requester, target, delay, () -> {
                                     requester.teleport(
-                                            (ServerWorld) target.getEntityWorld(),
+                                            target.getEntityWorld(),
                                             target.getX() + 0.5,
                                             target.getY(),
                                             target.getZ() + 0.5,
@@ -86,7 +85,7 @@ public class TeleportAcceptCommand {
                                 HomeLinkMessages.PrivateMessage(target, String.format(HomeLinkMessages.TELEPORTING_YOU_TO_IN_SECONDS, requester.getName().getString(), delay));
                                 TeleportScheduler.schedule(target, requester, delay, () -> {
                                     target.teleport(
-                                            (ServerWorld) requester.getEntityWorld(),
+                                            requester.getEntityWorld(),
                                             requester.getX() + 0.5,
                                             requester.getY(),
                                             requester.getZ() + 0.5,
