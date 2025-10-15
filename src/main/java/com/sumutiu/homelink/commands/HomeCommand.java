@@ -38,7 +38,7 @@ public class HomeCommand {
                     }
 
                     Map.Entry<String, HomeData> first = playerHomes.entrySet().iterator().next();
-                    return teleportToHome(player, first.getKey(), first.getValue());
+                    return teleportToHome(player, first.getKey(), first.getValue(), source.getServer());
                 })
                 .then(CommandManager.argument("name", StringArgumentType.word())
                         .suggests(HomeStorage::suggestHomeNames)
@@ -57,14 +57,13 @@ public class HomeCommand {
                                 return 0;
                             }
 
-                            return teleportToHome(player, name, home);
+                            return teleportToHome(player, name, home, source.getServer());
                         })
                 )
         );
     }
 
-    private static int teleportToHome(ServerPlayerEntity player, String name, HomeData home) {
-        MinecraftServer server = player.getServer();
+    private static int teleportToHome(ServerPlayerEntity player, String name, HomeData home, MinecraftServer server) {
         if (server == null) {
             HomeLinkMessages.Logger(2, HomeLinkMessages.SERVER_NOT_AVAILABLE);
             return 0;

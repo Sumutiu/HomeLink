@@ -35,7 +35,7 @@ public class BackCommand {
                         return 0;
                     }
 
-                    MinecraftServer server = player.getServer();
+                    MinecraftServer server = source.getServer();
                     if (server == null) {
                         HomeLinkMessages.Logger(2, HomeLinkMessages.SERVER_NOT_AVAILABLE);
                         return 0;

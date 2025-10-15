@@ -27,7 +27,7 @@ public class BackStorage {
     public static void save(ServerPlayerEntity player, BlockPos pos) {
         lastPositions.put(player.getUuidAsString(), new BackData(
                 pos,
-                player.getWorld().getRegistryKey().getValue().toString(),
+                player.getEntityWorld().getRegistryKey().getValue().toString(),
                 player.getYaw(),
                 player.getPitch()
         ));

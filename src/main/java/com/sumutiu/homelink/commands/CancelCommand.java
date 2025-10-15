@@ -18,12 +18,6 @@ public class CancelCommand {
                         return 0;
                     }
 
-                    MinecraftServer server = player.getServer();
-                    if (server == null) {
-                        HomeLinkMessages.Logger(2, HomeLinkMessages.SERVER_NOT_AVAILABLE);
-                        return 0;
-                    }
-
                     TeleportScheduler.cancelPlayerTeleportOnCancel(player);
                     return 1;
                 })

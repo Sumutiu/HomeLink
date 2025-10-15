@@ -30,7 +30,7 @@ public class TeleportDenyCommand {
 
                             String requesterName = StringArgumentType.getString(ctx, "name");
 
-                            MinecraftServer server = target.getServer();
+                            MinecraftServer server = source.getServer();
                             if (server == null) {
                                 HomeLinkMessages.Logger(2, HomeLinkMessages.SERVER_NOT_AVAILABLE);
                                 return 0;

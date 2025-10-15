@@ -78,7 +78,7 @@ public class HomeStorage {
 
         HomeData data = new HomeData(
                 pos,
-                player.getWorld().getRegistryKey().getValue().toString(),
+                player.getEntityWorld().getRegistryKey().getValue().toString(),
                 player.getYaw(),
                 player.getPitch()
         );

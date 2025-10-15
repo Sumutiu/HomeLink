@@ -2,9 +2,12 @@ package com.sumutiu.homelink.util;
 
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.world.World;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,12 +15,12 @@ public class HomeLinkMessages {
 
     // Core / General
     public static final String MOD_ASCII_BANNER = """
-         _   _                      _     _       _   \s
-        | | | |                    | |   (_)     | |  \s
+         _   _                      _     _       _   \\s
+        | | | |                    | |   (_)     | |  \\s
         | |_| | ___  _ __ ___   ___| |    _ _ __ | | __
-        |  _  |/ _ \\| '_ ` _ \\ / _ \\ |   | | '_ \\| |/ /
-        | | | | (_) | | | | | |  __/ |___| | | | |   <\s
-        \\_| |_/\\___/|_| |_| |_|\\___\\_____/|_| |_|_|\\_\\
+        |  _  |/ _ \\| '_ ` _ \\ / _ \\ |   | | '_ \\ |/ /
+        | | | | (_) | | | | | |  __/ |___| | | | |   <\\s
+        \\_| |_/\\___/|_| |_| |_|\\___\\_____/|_| |_|_|\\\\_\\\\
         """;
     public static final String Mod_ID = "[HomeLink]";
     public static final String SCHEDULER_SERVICE_NAME = "[TeleportScheduler]";
@@ -130,9 +133,15 @@ public class HomeLinkMessages {
     }
 
     public static boolean isConnected(ServerPlayerEntity player) {
-        return player != null
-                && player.getServer() != null
-                && player.getServer().getPlayerManager().getPlayer(player.getUuid()) == player;
+        if (player == null) {
+            return false;
+        }
+        World world = player.getEntityWorld();
+        if (!(world instanceof ServerWorld)) {
+            return false;
+        }
+        MinecraftServer server = ((ServerWorld) world).getServer();
+        return server.getPlayerManager().getPlayer(player.getUuid()) == player;
     }
 
     public static void logAsciiBanner(String banner, String footer) {

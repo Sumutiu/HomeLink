@@ -6,6 +6,8 @@ import com.sumutiu.homelink.config.HomeLinkConfig;
 import com.sumutiu.homelink.util.HomeLinkMessages;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.world.World;
 
 import java.util.Map;
 import java.util.UUID;
@@ -63,11 +65,14 @@ public class TeleportRequestManager {
     public static CompletableFuture<Suggestions> suggestPendingRequestNames(ServerPlayerEntity target, SuggestionsBuilder builder) {
         TeleportRequest request = activeRequests.get(target.getUuid());
         if (request != null) {
-            MinecraftServer server = target.getServer();
-            if (server != null) {
-                ServerPlayerEntity requester = server.getPlayerManager().getPlayer(request.requesterId());
-                if (requester != null) {
-                    builder.suggest(requester.getName().getString());
+            World world = target.getEntityWorld();
+            if(world instanceof ServerWorld){
+                MinecraftServer server = ((ServerWorld) world).getServer();
+                if (server != null) {
+                    ServerPlayerEntity requester = server.getPlayerManager().getPlayer(request.requesterId());
+                    if (requester != null) {
+                        builder.suggest(requester.getName().getString());
+                    }
                 }
             }
         }

@@ -34,7 +34,7 @@ public class TeleportToCommand {
 
                             String targetName = StringArgumentType.getString(ctx, "target");
 
-                            MinecraftServer server = requester.getServer();
+                            MinecraftServer server = source.getServer();
                             if (server == null) {
                                 HomeLinkMessages.Logger(2, HomeLinkMessages.SERVER_NOT_AVAILABLE);
                                 return 0;
