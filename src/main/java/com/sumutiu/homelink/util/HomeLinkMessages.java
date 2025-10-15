@@ -7,7 +7,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import net.minecraft.world.World;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -136,11 +135,11 @@ public class HomeLinkMessages {
         if (player == null) {
             return false;
         }
-        World world = player.getEntityWorld();
+        ServerWorld world = player.getEntityWorld();
         if (!(world instanceof ServerWorld)) {
             return false;
         }
-        MinecraftServer server = ((ServerWorld) world).getServer();
+        MinecraftServer server = world.getServer();
         return server.getPlayerManager().getPlayer(player.getUuid()) == player;
     }
 
