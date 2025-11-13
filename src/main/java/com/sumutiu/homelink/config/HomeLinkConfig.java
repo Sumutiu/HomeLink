@@ -19,6 +19,7 @@ public class HomeLinkConfig {
         public boolean HomeLink_Cancel_OnMove = false;
         public int HomeLink_Teleport_Delay = 5;
         public int HomeLink_Teleport_Accept_Delay = 15;
+        public int HomeLink_Invulnerability_Time = 3;
     }
 
     private static ConfigData config = new ConfigData();
@@ -61,4 +62,5 @@ public class HomeLinkConfig {
     public static int getBackDelay() { return config.HomeLink_Back_Delay; }
     public static int getTeleportAcceptDelay() { return config.HomeLink_Teleport_Accept_Delay; }
     public static int getTeleportDelay() { return config.HomeLink_Teleport_Delay; }
+    public static int getInvulnerabilityTime() { return config.HomeLink_Invulnerability_Time; }
 }
