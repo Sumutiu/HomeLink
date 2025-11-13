@@ -90,6 +90,7 @@ public class TeleportScheduler {
                 } else {
                     // Successful teleport
                     BackStorage.save(teleportedPlayer, teleportedPlayer.getBlockPos());
+                    makePlayerInvulnerable(teleportedPlayer, 3);
                     teleportTask.run();
 
                     ServerWorld world = teleportedPlayer.getEntityWorld();
@@ -153,5 +154,14 @@ public class TeleportScheduler {
         } catch (Exception e) {
             HomeLinkMessages.Logger(2, String.format(HomeLinkMessages.TELEPORT_SCHEDULER_SHUTDOWN_FAILED, e.getMessage()));
         }
+    }
+
+    public static void makePlayerInvulnerable(ServerPlayerEntity player, int durationSeconds) {
+        player.setInvulnerable(true);
+        scheduler.schedule(() -> {
+            if (player != null && player.isAlive()) {
+                player.setInvulnerable(false);
+            }
+        }, durationSeconds, TimeUnit.SECONDS);
     }
 }
