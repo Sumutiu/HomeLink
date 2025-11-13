@@ -13,22 +13,20 @@ public class HomeLinkConfig {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     public static class ConfigData {
-        public int HomeLink_MaxHomes = 5;
-        public int HomeLink_Home_Delay = 5;
-        public int HomeLink_Back_Delay = 5;
-        public boolean HomeLink_Cancel_OnMove = false;
-        public int HomeLink_Teleport_Delay = 5;
-        public int HomeLink_Teleport_Accept_Delay = 15;
-        public int HomeLink_Invulnerability_Time = 3;
+        public Integer HomeLink_MaxHomes = 5;
+        public Integer HomeLink_Home_Delay = 5;
+        public Integer HomeLink_Back_Delay = 5;
+        public Boolean HomeLink_Cancel_OnMove = false;
+        public Integer HomeLink_Teleport_Delay = 5;
+        public Integer HomeLink_Teleport_Accept_Delay = 15;
+        public Integer HomeLink_Invulnerability_Time = 3;
     }
 
     private static ConfigData config = new ConfigData();
 
     public static boolean save() {
         try (Writer writer = new FileWriter(CONFIG_FILE.toFile())) {
-            GSON.toJson(new ConfigData(), writer);
-            // This message is not ideal, but we are not allowed to add new messages.
-            // It is logged when a new default configuration is created.
+            GSON.toJson(config, writer);
             Logger(0, DEFAULT_CONFIG_LOADED);
             return true;
         } catch (IOException e) {
@@ -38,22 +36,36 @@ public class HomeLinkConfig {
     }
 
     public static boolean load() {
+        boolean updated = false;
         try (Reader reader = new FileReader(CONFIG_FILE.toFile())) {
             ConfigData loaded = GSON.fromJson(reader, ConfigData.class);
             if (loaded != null) {
                 config = loaded;
+
+                // Check for missing fields (null means they weren't present)
+                if (config.HomeLink_MaxHomes == null) { config.HomeLink_MaxHomes = 5; updated = true; }
+                if (config.HomeLink_Home_Delay == null) { config.HomeLink_Home_Delay = 5; updated = true; }
+                if (config.HomeLink_Back_Delay == null) { config.HomeLink_Back_Delay = 5; updated = true; }
+                if (config.HomeLink_Cancel_OnMove == null) { config.HomeLink_Cancel_OnMove = false; updated = true; }
+                if (config.HomeLink_Teleport_Delay == null) { config.HomeLink_Teleport_Delay = 5; updated = true; }
+                if (config.HomeLink_Teleport_Accept_Delay == null) { config.HomeLink_Teleport_Accept_Delay = 15; updated = true; }
+                if (config.HomeLink_Invulnerability_Time == null) { config.HomeLink_Invulnerability_Time = 3; updated = true; }
+
                 Logger(0, CONFIG_LOADED);
             } else {
-                // The config file is present but malformed. Log a warning and load default settings.
-                // The mod will not be prevented from starting, to avoid start-up failures for a misconfigured mod.
                 Logger(1, CONFIG_LOAD_FAILED_MALFORMED);
                 config = new ConfigData();
+                updated = true;
             }
-            return true;
         } catch (IOException e) {
             Logger(2, String.format(CONFIG_LOAD_FAILED, e.getMessage()));
             return false;
         }
+
+        // Save updated file if defaults were added
+        if (updated) save();
+
+        return true;
     }
 
     public static int getMaxHomes() { return config.HomeLink_MaxHomes; }
