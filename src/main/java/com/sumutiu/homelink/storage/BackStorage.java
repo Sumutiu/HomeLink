@@ -1,7 +1,7 @@
 package com.sumutiu.homelink.storage;
 
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.core.BlockPos;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,16 +24,16 @@ public class BackStorage {
 
     private static final Map<String, BackData> lastPositions = new HashMap<>();
 
-    public static void save(ServerPlayerEntity player, BlockPos pos) {
-        lastPositions.put(player.getUuidAsString(), new BackData(
+    public static void save(ServerPlayer player, BlockPos pos) {
+        lastPositions.put(player.getStringUUID(), new BackData(
                 pos,
-                player.getEntityWorld().getRegistryKey().getValue().toString(),
-                player.getYaw(),
-                player.getPitch()
+                player.level().dimension().identifier().toString(),
+                player.getYRot(),
+                player.getXRot()
         ));
     }
 
-    public static BackData get(ServerPlayerEntity player) {
-        return lastPositions.get(player.getUuidAsString());
+    public static BackData get(ServerPlayer player) {
+        return lastPositions.get(player.getStringUUID());
     }
 }

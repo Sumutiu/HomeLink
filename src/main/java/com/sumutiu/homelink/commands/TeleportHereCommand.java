@@ -5,62 +5,91 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.sumutiu.homelink.teleport.TeleportRequestManager;
 import com.sumutiu.homelink.teleport.TeleportRequestManager.RequestType;
 import com.sumutiu.homelink.util.HomeLinkMessages;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 
 public class TeleportHereCommand {
 
-    public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
-        dispatcher.register(CommandManager.literal("tphere")
-                .then(CommandManager.argument("target", StringArgumentType.word())
-                        .suggests((context, builder) -> {
-                            MinecraftServer server = context.getSource().getServer();
-                            if (server != null) {
-                                return net.minecraft.command.CommandSource.suggestMatching(server.getPlayerNames(), builder);
-                            }
-                            return builder.buildFuture();
-                        })
-                        .executes(ctx -> {
-                            ServerCommandSource source = ctx.getSource();
-                            if (!(source.getEntity() instanceof ServerPlayerEntity requester)) {
-                                HomeLinkMessages.Logger(1, HomeLinkMessages.PLAYER_ONLY_COMMAND);
-                                return 0;
-                            }
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+        dispatcher.register(
+                Commands.literal("tphere")
+                        .then(Commands.argument("target", StringArgumentType.word())
+                                .suggests((context, builder) -> {
+                                    MinecraftServer server = context.getSource().getServer();
+                                    return SharedSuggestionProvider.suggest(
+                                            server.getPlayerNames(),
+                                            builder
+                                    );
 
-                            String targetName = StringArgumentType.getString(ctx, "target");
+                                })
+                                .executes(ctx -> {
 
-                            MinecraftServer server = source.getServer();
-                            if (server == null) {
-                                HomeLinkMessages.Logger(2, HomeLinkMessages.SERVER_NOT_AVAILABLE);
-                                return 0;
-                            }
+                                    CommandSourceStack source = ctx.getSource();
 
-                            ServerPlayerEntity target = server.getPlayerManager().getPlayer(targetName);
-                            if (target == null) {
-                                HomeLinkMessages.PrivateMessage(requester, String.format(HomeLinkMessages.PLAYER_NOT_FOUND, targetName));
-                                return 0;
-                            }
+                                    if (!(source.getEntity() instanceof ServerPlayer requester)) {
+                                        HomeLinkMessages.Logger(1, HomeLinkMessages.PLAYER_ONLY_COMMAND);
+                                        return 0;
+                                    }
 
-                            if (target == requester) {
-                                HomeLinkMessages.PrivateMessage(requester, HomeLinkMessages.TELEPORT_SELF_DENIED);
-                                return 0;
-                            }
+                                    String targetName = StringArgumentType.getString(ctx, "target");
 
-                            if (TeleportRequestManager.hasRequest(target)) {
-                                HomeLinkMessages.PrivateMessage(requester, HomeLinkMessages.PLAYER_HAS_PENDING_REQUEST);
-                                return 0;
-                            }
+                                    MinecraftServer server = source.getServer();
 
-                            TeleportRequestManager.sendRequest(requester, target, RequestType.HERE);
+                                    ServerPlayer target = server.getPlayerList().getPlayerByName(targetName);
 
-                            HomeLinkMessages.PrivateMessage(requester, String.format(HomeLinkMessages.TELEPORT_REQUEST_SENT_TO, target.getName().getString()));
-                            HomeLinkMessages.PrivateMessage(target, String.format(HomeLinkMessages.TELEPORT_REQUEST_PROMPT_HERE, requester.getName().getString(), requester.getName().getString()));
+                                    if (target == null) {
+                                        HomeLinkMessages.PrivateMessage(
+                                                requester,
+                                                String.format(HomeLinkMessages.PLAYER_NOT_FOUND, targetName)
+                                        );
+                                        return 0;
+                                    }
 
-                            return 1;
-                        })
-                )
+                                    if (target.equals(requester)) {
+                                        HomeLinkMessages.PrivateMessage(
+                                                requester,
+                                                HomeLinkMessages.TELEPORT_SELF_DENIED
+                                        );
+                                        return 0;
+                                    }
+
+                                    if (TeleportRequestManager.hasRequest(target)) {
+                                        HomeLinkMessages.PrivateMessage(
+                                                requester,
+                                                HomeLinkMessages.PLAYER_HAS_PENDING_REQUEST
+                                        );
+                                        return 0;
+                                    }
+
+                                    TeleportRequestManager.sendRequest(
+                                            requester,
+                                            target,
+                                            RequestType.HERE
+                                    );
+
+                                    HomeLinkMessages.PrivateMessage(
+                                            requester,
+                                            String.format(
+                                                    HomeLinkMessages.TELEPORT_REQUEST_SENT_TO,
+                                                    target.getName().getString()
+                                            )
+                                    );
+
+                                    HomeLinkMessages.PrivateMessage(
+                                            target,
+                                            String.format(
+                                                    HomeLinkMessages.TELEPORT_REQUEST_PROMPT_HERE,
+                                                    requester.getName().getString(),
+                                                    requester.getName().getString()
+                                            )
+                                    );
+
+                                    return 1;
+                                })
+                        )
         );
     }
 }

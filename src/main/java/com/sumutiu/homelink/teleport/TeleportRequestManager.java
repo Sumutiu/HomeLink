@@ -5,14 +5,12 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.sumutiu.homelink.config.HomeLinkConfig;
 import com.sumutiu.homelink.util.HomeLinkMessages;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
 
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.*;
-
-// This handles request lifetimes.
 
 public class TeleportRequestManager {
 
@@ -21,19 +19,21 @@ public class TeleportRequestManager {
         HERE
     }
 
-    public record TeleportRequest(UUID requesterId, RequestType type) { }
+    public record TeleportRequest(UUID requesterId, RequestType type) {}
 
     public static final Map<UUID, TeleportRequest> activeRequests = new ConcurrentHashMap<>();
-    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1, runnable -> {
-        Thread thread = new Thread(runnable);
-        thread.setDaemon(true); // Allows server shutdown
-        thread.setName(HomeLinkMessages.Mod_ID + " - " + HomeLinkMessages.MANAGER_SERVICE_NAME);
-        return thread;
-    });
 
-    public static void sendRequest(ServerPlayerEntity requester, ServerPlayerEntity target, RequestType type) {
-        UUID targetId = target.getUuid();
-        UUID requesterId = requester.getUuid();
+    private static final ScheduledExecutorService scheduler =
+            Executors.newScheduledThreadPool(1, runnable -> {
+                Thread thread = new Thread(runnable);
+                thread.setDaemon(true);
+                thread.setName(HomeLinkMessages.Mod_ID + " - " + HomeLinkMessages.MANAGER_SERVICE_NAME);
+                return thread;
+            });
+
+    public static void sendRequest(ServerPlayer requester, ServerPlayer target, RequestType type) {
+        UUID targetId = target.getUUID();
+        UUID requesterId = requester.getUUID();
 
         activeRequests.put(targetId, new TeleportRequest(requesterId, type));
 
@@ -41,38 +41,52 @@ public class TeleportRequestManager {
 
         scheduler.schedule(() -> {
             if (activeRequests.remove(targetId) != null) {
-                HomeLinkMessages.PrivateMessage(requester, String.format(HomeLinkMessages.TELEPORT_REQUEST_TO_TIMEOUT, target.getName().getString()));
-                HomeLinkMessages.PrivateMessage(target, String.format(HomeLinkMessages.TELEPORT_REQUEST_FROM_TIMEOUT, requester.getName().getString()));
-                HomeLinkMessages.Logger(0, String.format(HomeLinkMessages.LOG_TELEPORT_TIMEOUT, requester.getName().getString(), target.getName().getString()));
+                HomeLinkMessages.PrivateMessage(requester,
+                        String.format(HomeLinkMessages.TELEPORT_REQUEST_TO_TIMEOUT, target.getName().getString()));
+
+                HomeLinkMessages.PrivateMessage(target,
+                        String.format(HomeLinkMessages.TELEPORT_REQUEST_FROM_TIMEOUT, requester.getName().getString()));
+
+                HomeLinkMessages.Logger(0,
+                        String.format(HomeLinkMessages.LOG_TELEPORT_TIMEOUT,
+                                requester.getName().getString(),
+                                target.getName().getString()));
             }
         }, timeoutSeconds, TimeUnit.SECONDS);
     }
 
-    public static boolean hasRequest(ServerPlayerEntity target) {
-        return activeRequests.containsKey(target.getUuid());
+    public static boolean hasRequest(ServerPlayer target) {
+        return activeRequests.containsKey(target.getUUID());
     }
 
-    public static TeleportRequest getRequest(ServerPlayerEntity target) {
-        return activeRequests.get(target.getUuid());
+    public static TeleportRequest getRequest(ServerPlayer target) {
+        return activeRequests.get(target.getUUID());
     }
 
     public static void clearRequest(UUID playerId) {
-        activeRequests.remove(playerId); // If player is the target
-        activeRequests.entrySet().removeIf(entry -> entry.getValue().requesterId().equals(playerId)); // If player is the requester
+        // Remove if player is the target
+        activeRequests.remove(playerId);
+
+        // Remove if player is requester
+        activeRequests.entrySet().removeIf(entry ->
+                entry.getValue().requesterId().equals(playerId));
     }
 
-    public static CompletableFuture<Suggestions> suggestPendingRequestNames(ServerPlayerEntity target, SuggestionsBuilder builder) {
-        TeleportRequest request = activeRequests.get(target.getUuid());
+    public static CompletableFuture<Suggestions> suggestPendingRequestNames(ServerPlayer target, SuggestionsBuilder builder) {
+        TeleportRequest request = activeRequests.get(target.getUUID());
+
         if (request != null) {
-            ServerWorld world = target.getEntityWorld();
-            if(world instanceof ServerWorld){
-                MinecraftServer server = world.getServer();
-                ServerPlayerEntity requester = server.getPlayerManager().getPlayer(request.requesterId());
-                if (requester != null) {
-                    builder.suggest(requester.getName().getString());
-                }
+            ServerLevel level = target.level();
+
+            MinecraftServer server = level.getServer();
+
+            ServerPlayer requester = server.getPlayerList().getPlayer(request.requesterId());
+
+            if (requester != null) {
+                builder.suggest(requester.getName().getString());
             }
         }
+
         return builder.buildFuture();
     }
 
@@ -81,7 +95,8 @@ public class TeleportRequestManager {
             scheduler.shutdownNow();
             HomeLinkMessages.Logger(0, HomeLinkMessages.TELEPORT_REQUEST_MANAGER_SHUTDOWN);
         } catch (Exception e) {
-            HomeLinkMessages.Logger(2, String.format(HomeLinkMessages.TELEPORT_REQUEST_MANAGER_SHUTDOWN_FAILED, e.getMessage()));
+            HomeLinkMessages.Logger(2,
+                    String.format(HomeLinkMessages.TELEPORT_REQUEST_MANAGER_SHUTDOWN_FAILED, e.getMessage()));
         }
     }
 }

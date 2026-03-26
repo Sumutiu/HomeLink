@@ -5,12 +5,12 @@ import com.sumutiu.homelink.storage.BackStorage;
 import com.sumutiu.homelink.teleport.TeleportRequestManager;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.sounds.SoundEvents;
 
 import java.util.Map;
 import java.util.Set;
@@ -27,15 +27,18 @@ public class TeleportScheduler {
     });
 
     public static void initialize() {
-        // Cleanup when a player disconnects
-        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
-            ServerPlayerEntity player = handler.getPlayer();
-            if (player != null) { dataCleanup(player.getUuid()); }
+
+        // Disconnect cleanup
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, _) -> {
+            ServerPlayer player = handler.getPlayer();
+            dataCleanup(player.getUUID());
         });
 
-        // Cancel teleport if player takes damage
-        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
-            if (entity instanceof ServerPlayerEntity player) { cancelPlayerTeleportOnDamage(player); }
+        // Cancel on damage
+        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, _, _) -> {
+            if (entity instanceof ServerPlayer player) {
+                cancelPlayerTeleportOnDamage(player);
+            }
             return true;
         });
     }
@@ -45,94 +48,115 @@ public class TeleportScheduler {
     private static final Set<UUID> cancelTeleportsOnDamage = ConcurrentHashMap.newKeySet();
     private static final Set<UUID> cancelTeleportsOnCancel = ConcurrentHashMap.newKeySet();
 
-    public static void schedule(ServerPlayerEntity teleportedPlayer, ServerPlayerEntity targetPlayer, int delaySeconds, Runnable teleportTask) {
-        UUID teleportedPlayerUUID = teleportedPlayer != null ? teleportedPlayer.getUuid() : null;
+    public static void schedule(ServerPlayer teleportedPlayer, ServerPlayer targetPlayer, int delaySeconds, Runnable teleportTask) {
+
+        UUID uuid = teleportedPlayer != null ? teleportedPlayer.getUUID() : null;
 
         if (teleportedPlayer != null && isTeleporting(teleportedPlayer)) {
             HomeLinkMessages.PrivateMessage(teleportedPlayer, HomeLinkMessages.TELEPORT_IN_PROGRESS);
-            activeTeleports.add(teleportedPlayerUUID);
+            activeTeleports.add(uuid);
             return;
         }
 
         if (delaySeconds <= 0) {
             teleportTask.run();
-            activeTeleports.remove(teleportedPlayerUUID);
+            activeTeleports.remove(uuid);
             return;
         }
 
         if (teleportedPlayer != null) {
-            BlockPos initialPos = teleportedPlayer.getBlockPos();
-            teleportPositions.put(teleportedPlayerUUID, initialPos);
-            HomeLinkMessages.PrivateMessage(teleportedPlayer, String.format(HomeLinkMessages.TELEPORT_DELAY_MESSAGE, delaySeconds));
+            BlockPos initialPos = teleportedPlayer.blockPosition();
+            teleportPositions.put(uuid, initialPos);
+
+            HomeLinkMessages.PrivateMessage(
+                    teleportedPlayer,
+                    String.format(HomeLinkMessages.TELEPORT_DELAY_MESSAGE, delaySeconds)
+            );
         }
 
         scheduler.schedule(() -> {
-            boolean teleportValid = HomeLinkMessages.isConnected(teleportedPlayer);
-            boolean targetStillConnected = targetPlayer == null || HomeLinkMessages.isConnected(targetPlayer);
 
-            if (!teleportValid || !targetStillConnected) {
+            boolean teleportValid = HomeLinkMessages.isConnected(teleportedPlayer);
+            boolean targetValid = targetPlayer == null || HomeLinkMessages.isConnected(targetPlayer);
+
+            if (!teleportValid || !targetValid) {
+
                 if (HomeLinkMessages.isConnected(targetPlayer)) {
                     HomeLinkMessages.PrivateMessage(targetPlayer, HomeLinkMessages.TELEPORT_CANCELLED_DISCONNECT);
                 }
+
                 if (HomeLinkMessages.isConnected(teleportedPlayer)) {
                     HomeLinkMessages.PrivateMessage(teleportedPlayer, HomeLinkMessages.TELEPORT_CANCELLED_DISCONNECT);
                 }
+
             } else {
-                BlockPos currentPos = teleportedPlayer.getBlockPos();
+
+                BlockPos currentPos = teleportedPlayer.blockPosition();
                 boolean cancelOnMove = HomeLinkConfig.getCancelOnMove();
 
-                if (cancelOnMove && !currentPos.equals(teleportPositions.get(teleportedPlayerUUID))) {
+                if (cancelOnMove && !currentPos.equals(teleportPositions.get(uuid))) {
+
                     HomeLinkMessages.PrivateMessage(teleportedPlayer, HomeLinkMessages.TELEPORT_CANCELLED_MOVEMENT);
-                } else if (cancelTeleportsOnDamage.remove(teleportedPlayerUUID)) {
+
+                } else if (cancelTeleportsOnDamage.remove(uuid)) {
+
                     HomeLinkMessages.PrivateMessage(teleportedPlayer, HomeLinkMessages.TELEPORT_CANCELLED_DAMAGED);
-                } else if (cancelTeleportsOnCancel.remove(teleportedPlayerUUID)) {
+
+                } else if (cancelTeleportsOnCancel.remove(uuid)) {
+
                     HomeLinkMessages.PrivateMessage(teleportedPlayer, HomeLinkMessages.TELEPORT_CANCELLED_CANCEL);
+
                 } else {
-                    // Successful teleport
-                    BackStorage.save(teleportedPlayer, teleportedPlayer.getBlockPos());
+
+                    BackStorage.save(teleportedPlayer, teleportedPlayer.blockPosition());
+
                     makePlayerInvulnerable(teleportedPlayer, HomeLinkConfig.getInvulnerabilityTime());
+
                     teleportTask.run();
 
-                    ServerWorld world = teleportedPlayer.getEntityWorld();
-                    if(world instanceof ServerWorld){
-                        world.playSound(
-                                null,
-                                teleportedPlayer.getX(),
-                                teleportedPlayer.getY(),
-                                teleportedPlayer.getZ(),
-                                SoundEvents.ENTITY_ENDERMAN_TELEPORT,
-                                SoundCategory.PLAYERS,
-                                1.0f,
-                                1.0f
-                        );
+                    ServerLevel level = teleportedPlayer.level();
 
-                        world.spawnParticles(
-                                ParticleTypes.PORTAL,
-                                teleportedPlayer.getX(),
-                                teleportedPlayer.getY() + 1,
-                                teleportedPlayer.getZ(),
-                                32, 0.5, 0.5, 0.5, 0.2
-                        );
-                    }
+                    level.playSound(
+                            null,
+                            teleportedPlayer.getX(),
+                            teleportedPlayer.getY(),
+                            teleportedPlayer.getZ(),
+                            SoundEvents.ENDERMAN_TELEPORT,
+                            SoundSource.PLAYERS,
+                            1.0f,
+                            1.0f
+                    );
+
+                    level.sendParticles(
+                            ParticleTypes.PORTAL,
+                            teleportedPlayer.getX(),
+                            teleportedPlayer.getY() + 1,
+                            teleportedPlayer.getZ(),
+                            32,
+                            0.5, 0.5, 0.5,
+                            0.2
+                    );
                 }
             }
-            dataCleanup(teleportedPlayerUUID);
+
+            dataCleanup(uuid);
+
         }, delaySeconds, TimeUnit.SECONDS);
     }
 
-    public static boolean isTeleporting(ServerPlayerEntity player) {
-        return activeTeleports.contains(player.getUuid());
+    public static boolean isTeleporting(ServerPlayer player) {
+        return activeTeleports.contains(player.getUUID());
     }
 
-    public static void cancelPlayerTeleportOnDamage(ServerPlayerEntity player) {
+    public static void cancelPlayerTeleportOnDamage(ServerPlayer player) {
         if (isTeleporting(player)) {
-            cancelTeleportsOnDamage.add(player.getUuid());
+            cancelTeleportsOnDamage.add(player.getUUID());
         }
     }
 
-    public static void cancelPlayerTeleportOnCancel(ServerPlayerEntity player) {
+    public static void cancelPlayerTeleportOnCancel(ServerPlayer player) {
         if (isTeleporting(player)) {
-            cancelTeleportsOnCancel.add(player.getUuid());
+            cancelTeleportsOnCancel.add(player.getUUID());
             HomeLinkMessages.PrivateMessage(player, HomeLinkMessages.TELEPORT_CANCEL_QUEUED);
         } else {
             HomeLinkMessages.PrivateMessage(player, HomeLinkMessages.NO_PENDING_TELEPORT);
@@ -152,12 +176,14 @@ public class TeleportScheduler {
             scheduler.shutdownNow();
             HomeLinkMessages.Logger(0, HomeLinkMessages.TELEPORT_SCHEDULER_SHUTDOWN);
         } catch (Exception e) {
-            HomeLinkMessages.Logger(2, String.format(HomeLinkMessages.TELEPORT_SCHEDULER_SHUTDOWN_FAILED, e.getMessage()));
+            HomeLinkMessages.Logger(2,
+                    String.format(HomeLinkMessages.TELEPORT_SCHEDULER_SHUTDOWN_FAILED, e.getMessage()));
         }
     }
 
-    public static void makePlayerInvulnerable(ServerPlayerEntity player, int durationSeconds) {
+    public static void makePlayerInvulnerable(ServerPlayer player, int durationSeconds) {
         player.setInvulnerable(true);
+
         scheduler.schedule(() -> {
             if (player.isAlive()) {
                 player.setInvulnerable(false);

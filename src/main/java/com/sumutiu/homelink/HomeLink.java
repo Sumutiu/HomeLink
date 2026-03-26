@@ -25,7 +25,7 @@ public class HomeLink implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		if (initPlugin()) {
-			ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+			ServerLifecycleEvents.SERVER_STOPPED.register(_ -> {
 				Logger(0, SHUTTING_DOWN_SCHEDULERS);
 				TeleportScheduler.shutdown();
 				TeleportRequestManager.shutdown();
@@ -33,7 +33,7 @@ public class HomeLink implements ModInitializer {
 			TeleportScheduler.initialize();
 			HomeStorage.initialize();
 
-			CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+			CommandRegistrationCallback.EVENT.register((dispatcher, _, _) -> {
 				SetHomeCommand.register(dispatcher);
 				DelHomeCommand.register(dispatcher);
 				HomeCommand.register(dispatcher);

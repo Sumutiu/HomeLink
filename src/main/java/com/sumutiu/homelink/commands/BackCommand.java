@@ -6,60 +6,70 @@ import com.sumutiu.homelink.storage.BackStorage;
 import com.sumutiu.homelink.storage.BackStorage.BackData;
 import com.sumutiu.homelink.util.HomeLinkMessages;
 import com.sumutiu.homelink.util.TeleportScheduler;
-import net.minecraft.network.packet.s2c.play.PositionFlag;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.RegistryKey;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Identifier;
-import net.minecraft.world.World;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.world.entity.Relative;
+import net.minecraft.world.level.Level;
 
 import java.util.EnumSet;
+import java.util.Objects;
 
 public class BackCommand {
-    public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
-        dispatcher.register(CommandManager.literal("tpback")
+
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+
+        dispatcher.register(Commands.literal("tpback")
                 .executes(ctx -> {
-                    ServerCommandSource source = ctx.getSource();
-                    if (!(source.getEntity() instanceof ServerPlayerEntity player)) {
+
+                    CommandSourceStack source = ctx.getSource();
+
+                    if (!(source.getEntity() instanceof ServerPlayer player)) {
                         HomeLinkMessages.Logger(1, HomeLinkMessages.PLAYER_ONLY_COMMAND);
                         return 0;
                     }
 
                     BackData back = BackStorage.get(player);
+
                     if (back == null) {
                         HomeLinkMessages.PrivateMessage(player, HomeLinkMessages.NO_BACK_LOCATION);
                         return 0;
                     }
 
                     MinecraftServer server = source.getServer();
-                    if (server == null) {
-                        HomeLinkMessages.Logger(2, HomeLinkMessages.SERVER_NOT_AVAILABLE);
-                        return 0;
-                    }
 
-                    RegistryKey<World> worldKey = RegistryKey.of(RegistryKeys.WORLD, Identifier.tryParse(back.world));
-                    ServerWorld targetWorld = server.getWorld(worldKey);
+                    ResourceKey<Level> dimensionKey = ResourceKey.create(
+                            Registries.DIMENSION,
+                            Objects.requireNonNull(Identifier.tryParse(back.world))
+                    );
+
+                    ServerLevel targetWorld = server.getLevel(dimensionKey);
 
                     if (targetWorld == null) {
-                        HomeLinkMessages.PrivateMessage(player, String.format(HomeLinkMessages.BACK_WORLD_NOT_FOUND, back.world));
+                        HomeLinkMessages.PrivateMessage(player,
+                                String.format(HomeLinkMessages.BACK_WORLD_NOT_FOUND, back.world));
                         return 0;
                     }
 
                     TeleportScheduler.schedule(player, null, HomeLinkConfig.getBackDelay(), () -> {
-                        player.teleport(
+
+                        player.teleportTo(
                                 targetWorld,
                                 back.pos.getX() + 0.5,
                                 back.pos.getY() + 0.5,
                                 back.pos.getZ() + 0.5,
-                                EnumSet.noneOf(PositionFlag.class),
+                                EnumSet.noneOf(Relative.class),
                                 back.yaw,
                                 back.pitch,
-                                false
+                                false // don't reset camera
                         );
+
+
                         HomeLinkMessages.PrivateMessage(player, HomeLinkMessages.BACK_TELEPORTED);
                     });
 

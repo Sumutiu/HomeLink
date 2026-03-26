@@ -8,9 +8,9 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.sumutiu.homelink.config.HomeLinkConfig;
 import com.sumutiu.homelink.util.HomeLinkMessages;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerPlayer;
 
 import java.io.*;
 import java.lang.reflect.Type;
@@ -20,23 +20,18 @@ import java.util.concurrent.CompletableFuture;
 import static com.sumutiu.homelink.HomeLink.*;
 
 public class HomeStorage {
+
     private static final Map<String, Map<String, HomeData>> homes = new HashMap<>();
     private static final Gson GSON = new Gson();
     private static final Type TYPE = new TypeToken<Map<String, HomeData>>() {}.getType();
 
     public static void initialize() {
-        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-            if (handler != null && handler.getPlayer() != null) { loadPlayerHomes(handler.getPlayer()); }
-            else { HomeLinkMessages.Logger(2, HomeLinkMessages.INVALID_CONNECTION_HANDLER); }
-        });
-        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
-            if (handler != null && handler.getPlayer() != null) { savePlayerHomes(handler.getPlayer()); }
-            else { HomeLinkMessages.Logger(2, HomeLinkMessages.INVALID_CONNECTION_HANDLER); }
-        });
+        ServerPlayConnectionEvents.JOIN.register((handler, _, _) -> loadPlayerHomes(handler.getPlayer()));
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, _) -> savePlayerHomes(handler.getPlayer()));
     }
 
-    public static void loadPlayerHomes(ServerPlayerEntity player) {
-        String uuid = player.getUuidAsString();
+    public static void loadPlayerHomes(ServerPlayer player) {
+        String uuid = player.getUUID().toString();
         File file = new File(STORAGE_FOLDER.toFile(), uuid + ".json");
 
         if (file.exists()) {
@@ -46,41 +41,47 @@ public class HomeStorage {
                     homes.put(uuid, data);
                 }
             } catch (IOException e) {
-                HomeLinkMessages.Logger(2, String.format(HomeLinkMessages.HOME_LOAD_FAILED, uuid, e));
+                HomeLinkMessages.Logger(2,
+                        String.format(HomeLinkMessages.HOME_LOAD_FAILED, uuid, e));
             }
         } else {
             homes.put(uuid, new HashMap<>());
         }
     }
 
-    public static void savePlayerHomes(ServerPlayerEntity player) {
-        String uuid = player.getUuidAsString();
+    public static void savePlayerHomes(ServerPlayer player) {
+        String uuid = player.getUUID().toString();
         File file = new File(STORAGE_FOLDER.toFile(), uuid + ".json");
 
         try (Writer writer = new FileWriter(file)) {
             GSON.toJson(homes.getOrDefault(uuid, new HashMap<>()), writer);
         } catch (IOException e) {
-            HomeLinkMessages.Logger(2, String.format(HomeLinkMessages.HOME_SAVE_FAILED, uuid, e));
+            HomeLinkMessages.Logger(2,
+                    String.format(HomeLinkMessages.HOME_SAVE_FAILED, uuid, e));
         }
     }
 
-    public static Map<String, HomeData> getAllHomes(ServerPlayerEntity player) {
-        return homes.getOrDefault(player.getUuidAsString(), new HashMap<>());
+    public static Map<String, HomeData> getAllHomes(ServerPlayer player) {
+        return homes.getOrDefault(player.getUUID().toString(), new HashMap<>());
     }
 
-    public static boolean setHome(ServerPlayerEntity player, String name, BlockPos pos) {
-        String uuid = player.getUuidAsString();
-        Map<String, HomeData> playerHomes = homes.computeIfAbsent(uuid, k -> new HashMap<>());
+    public static boolean setHome(ServerPlayer player, String name, BlockPos pos) {
+        String uuid = player.getUUID().toString();
+        Map<String, HomeData> playerHomes = homes.computeIfAbsent(uuid, _ -> new HashMap<>());
 
-        if (!playerHomes.containsKey(name) && playerHomes.size() >= HomeLinkConfig.getMaxHomes()) {
+        if (!playerHomes.containsKey(name)
+                && playerHomes.size() >= HomeLinkConfig.getMaxHomes()) {
             return false;
         }
 
+        // Mojang 26.1 world key handling
+        String dimensionId = player.level().dimension().identifier().toString();
+
         HomeData data = new HomeData(
                 pos,
-                player.getEntityWorld().getRegistryKey().getValue().toString(),
-                player.getYaw(),
-                player.getPitch()
+                dimensionId,
+                player.getYRot(),
+                player.getXRot()
         );
 
         playerHomes.put(name, data);
@@ -88,14 +89,15 @@ public class HomeStorage {
         return true;
     }
 
-    public static HomeData getHome(ServerPlayerEntity player, String name) {
-        String uuid = player.getUuidAsString();
+    public static HomeData getHome(ServerPlayer player, String name) {
+        String uuid = player.getUUID().toString();
         return homes.getOrDefault(uuid, new HashMap<>()).get(name);
     }
 
-    public static void deleteHome(ServerPlayerEntity player, String name) {
-        String uuid = player.getUuidAsString();
+    public static void deleteHome(ServerPlayer player, String name) {
+        String uuid = player.getUUID().toString();
         Map<String, HomeData> playerHomes = homes.get(uuid);
+
         if (playerHomes != null) {
             playerHomes.remove(name);
             savePlayerHomes(player);
@@ -103,16 +105,17 @@ public class HomeStorage {
     }
 
     public static CompletableFuture<Suggestions> suggestHomeNames(
-            CommandContext<ServerCommandSource> context,
+            CommandContext<CommandSourceStack> context,
             SuggestionsBuilder builder) {
 
-        ServerPlayerEntity player = context.getSource().getPlayer();
+        ServerPlayer player = context.getSource().getPlayer();
         if (player == null) {
             return builder.buildFuture();
         }
 
-        String uuid = player.getUuidAsString();
+        String uuid = player.getUUID().toString();
         Map<String, HomeData> playerHomes = homes.get(uuid);
+
         if (playerHomes != null) {
             for (String name : playerHomes.keySet()) {
                 builder.suggest(name);
