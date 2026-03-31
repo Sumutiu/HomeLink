@@ -12,12 +12,12 @@ public class HomeLinkMessages {
 
     // Core / General
     public static final String MOD_ASCII_BANNER = """
-         _   _                      _     _       _   \\
-        | | | |                    | |   (_)     | |  \\
-        | |_| | ___  _ __ ___   ___| |    _ _ __ | |__
-        |  _  |/ _ \\| '_ ` _ \\ / _ \\ |   | | '_ \\ |/ /
-        | | | | (_) | | | | | |  __/ |___| | | | |   <\\
-        \\_| |_/\\___/|_| |_| |_|\\___\\_____/|_| |_|_|\\\\_\\\\
+         _    _                      _      _       _   \s
+        | |  | |                    | |    (_)     | |  \s
+        | |__| | ___  _ __ ___   ___| |     _ _ __ | | __
+        |  __  |/ _ \\| '_ ` _ \\ / _ \\ |    | | '_ \\| |/ /
+        | |  | | (_) | | | | | |  __/ |____| | | | |   <\s
+        |_|  |_|\\___/|_| |_| |_|\\___|______|_|_| |_|_|\\_\\
         """;
     public static final String Mod_ID = "[HomeLink]";
     public static final String SCHEDULER_SERVICE_NAME = "[TeleportScheduler]";
