@@ -9,6 +9,9 @@ import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -71,6 +74,16 @@ public class HomeLink implements ModInitializer {
 				TeleportScheduler.shutdown();
 				TeleportRequestManager.shutdown();
 				HomeLinkInitialized = false;
+			}
+		});
+
+		ServerPlayConnectionEvents.JOIN.register((handler, _, _) -> {
+			ServerPlayer player = handler.getPlayer();
+
+			if (!HomeLinkInitialized) {
+				player.connection.disconnect(
+						Component.literal(MOD_INIT_NOT_READY)
+				);
 			}
 		});
 	}
