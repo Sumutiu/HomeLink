@@ -20,33 +20,59 @@ public class HomeLink implements ModInitializer {
 
 	public static final Path CONFIG_FOLDER = Path.of("config", "HomeLink");
 	public static final Path CONFIG_FILE = CONFIG_FOLDER.resolve("HomeLink.json");
-	public static final Path STORAGE_FOLDER = Path.of("mods", "HomeLink");
+	public static Path STORAGE_FOLDER;
+
+	public static volatile boolean HomeLinkInitialized = false;
 
 	@Override
 	public void onInitialize() {
-		if (initPlugin()) {
-			ServerLifecycleEvents.SERVER_STOPPED.register(_ -> {
+
+		// -----------------------------
+		// SERVER START (WORLD EXISTS)
+		// -----------------------------
+		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
+
+			long seed = server.getWorldGenSettings()
+					.options()
+					.seed();
+
+			STORAGE_FOLDER = Path.of(
+					"mods",
+					"HomeLink_Seed_" + Long.toUnsignedString(seed)
+			);
+
+			if (initPlugin()) {
+				// safe to init now because world exists
+				TeleportScheduler.initialize();
+				HomeStorage.initialize();
+
+				HomeLinkInitialized = true;
+
+			} else {
+				Logger(2, MOD_INIT_FAILED);
+			}
+		});
+
+		CommandRegistrationCallback.EVENT.register((dispatcher, _, _) -> {
+			SetHomeCommand.register(dispatcher);
+			DelHomeCommand.register(dispatcher);
+			HomeCommand.register(dispatcher);
+			BackCommand.register(dispatcher);
+			CancelCommand.register(dispatcher);
+			TeleportToCommand.register(dispatcher);
+			TeleportHereCommand.register(dispatcher);
+			TeleportAcceptCommand.register(dispatcher);
+			TeleportDenyCommand.register(dispatcher);
+		});
+
+		ServerLifecycleEvents.SERVER_STOPPED.register(_ -> {
+			if (HomeLinkInitialized) {
 				Logger(0, SHUTTING_DOWN_SCHEDULERS);
 				TeleportScheduler.shutdown();
 				TeleportRequestManager.shutdown();
-			});
-			TeleportScheduler.initialize();
-			HomeStorage.initialize();
-
-			CommandRegistrationCallback.EVENT.register((dispatcher, _, _) -> {
-				SetHomeCommand.register(dispatcher);
-				DelHomeCommand.register(dispatcher);
-				HomeCommand.register(dispatcher);
-				BackCommand.register(dispatcher);
-				CancelCommand.register(dispatcher);
-				TeleportToCommand.register(dispatcher);
-				TeleportHereCommand.register(dispatcher);
-				TeleportAcceptCommand.register(dispatcher);
-				TeleportDenyCommand.register(dispatcher);
-			});
-		} else {
-			Logger(2, MOD_INIT_FAILED);
-		}
+				HomeLinkInitialized = false;
+			}
+		});
 	}
 
 	private static boolean initPlugin() {
@@ -65,10 +91,10 @@ public class HomeLink implements ModInitializer {
 		try {
 			if (Files.notExists(STORAGE_FOLDER)) {
 				Files.createDirectories(STORAGE_FOLDER);
-				Logger(0, MAIN_FOLDER_CREATED);
+				Logger(0, STORAGE_FOLDER_CREATED);
 			}
 		} catch (IOException e) {
-			Logger(2, MAIN_FOLDER_CREATION_FAILED);
+			Logger(2, STORAGE_FOLDER_CREATION_FAILED);
 			return false;
 		}
 

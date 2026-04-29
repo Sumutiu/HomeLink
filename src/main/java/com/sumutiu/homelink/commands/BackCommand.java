@@ -4,7 +4,6 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.sumutiu.homelink.config.HomeLinkConfig;
 import com.sumutiu.homelink.storage.BackStorage;
 import com.sumutiu.homelink.storage.BackStorage.BackData;
-import com.sumutiu.homelink.util.HomeLinkMessages;
 import com.sumutiu.homelink.util.TeleportScheduler;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.CommandSourceStack;
@@ -20,6 +19,9 @@ import net.minecraft.world.level.Level;
 import java.util.EnumSet;
 import java.util.Objects;
 
+import static com.sumutiu.homelink.HomeLink.HomeLinkInitialized;
+import static com.sumutiu.homelink.util.HomeLinkMessages.*;
+
 public class BackCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
@@ -28,52 +30,56 @@ public class BackCommand {
                 .executes(ctx -> {
 
                     CommandSourceStack source = ctx.getSource();
-
                     if (!(source.getEntity() instanceof ServerPlayer player)) {
-                        HomeLinkMessages.Logger(1, HomeLinkMessages.PLAYER_ONLY_COMMAND);
+                        Logger(1, PLAYER_ONLY_COMMAND);
                         return 0;
                     }
 
-                    BackData back = BackStorage.get(player);
+                    if (HomeLinkInitialized) {
+                        BackData back = BackStorage.get(player);
 
-                    if (back == null) {
-                        HomeLinkMessages.PrivateMessage(player, HomeLinkMessages.NO_BACK_LOCATION);
-                        return 0;
-                    }
+                        if (back == null) {
+                            PrivateMessage(player, NO_BACK_LOCATION);
+                            return 0;
+                        }
 
-                    MinecraftServer server = source.getServer();
+                        MinecraftServer server = source.getServer();
 
-                    ResourceKey<Level> dimensionKey = ResourceKey.create(
-                            Registries.DIMENSION,
-                            Objects.requireNonNull(Identifier.tryParse(back.world))
-                    );
-
-                    ServerLevel targetWorld = server.getLevel(dimensionKey);
-
-                    if (targetWorld == null) {
-                        HomeLinkMessages.PrivateMessage(player,
-                                String.format(HomeLinkMessages.BACK_WORLD_NOT_FOUND, back.world));
-                        return 0;
-                    }
-
-                    TeleportScheduler.schedule(player, null, HomeLinkConfig.getBackDelay(), () -> {
-
-                        player.teleportTo(
-                                targetWorld,
-                                back.pos.getX() + 0.5,
-                                back.pos.getY() + 0.5,
-                                back.pos.getZ() + 0.5,
-                                EnumSet.noneOf(Relative.class),
-                                back.yaw,
-                                back.pitch,
-                                false // don't reset camera
+                        ResourceKey<Level> dimensionKey = ResourceKey.create(
+                                Registries.DIMENSION,
+                                Objects.requireNonNull(Identifier.tryParse(back.world))
                         );
 
+                        ServerLevel targetWorld = server.getLevel(dimensionKey);
 
-                        HomeLinkMessages.PrivateMessage(player, HomeLinkMessages.BACK_TELEPORTED);
-                    });
+                        if (targetWorld == null) {
+                            PrivateMessage(player,
+                                    String.format(BACK_WORLD_NOT_FOUND, back.world));
+                            return 0;
+                        }
 
-                    return 1;
+                        TeleportScheduler.schedule(player, null, HomeLinkConfig.getBackDelay(), () -> {
+
+                            player.teleportTo(
+                                    targetWorld,
+                                    back.pos.getX() + 0.5,
+                                    back.pos.getY() + 0.5,
+                                    back.pos.getZ() + 0.5,
+                                    EnumSet.noneOf(Relative.class),
+                                    back.yaw,
+                                    back.pitch,
+                                    false // don't reset camera
+                            );
+
+
+                            PrivateMessage(player, BACK_TELEPORTED);
+                        });
+
+                        return 1;
+                    } else {
+                        PrivateMessage(player, MOD_INIT_NOT_READY);
+                        return 0;
+                    }
                 })
         );
     }

@@ -4,12 +4,14 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.sumutiu.homelink.teleport.TeleportRequestManager;
 import com.sumutiu.homelink.teleport.TeleportRequestManager.RequestType;
-import com.sumutiu.homelink.util.HomeLinkMessages;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+
+import static com.sumutiu.homelink.HomeLink.HomeLinkInitialized;
+import static com.sumutiu.homelink.util.HomeLinkMessages.*;
 
 public class TeleportToCommand {
 
@@ -30,62 +32,42 @@ public class TeleportToCommand {
                                 .executes(ctx -> {
 
                                     CommandSourceStack source = ctx.getSource();
-
                                     if (!(source.getEntity() instanceof ServerPlayer requester)) {
-                                        HomeLinkMessages.Logger(1, HomeLinkMessages.PLAYER_ONLY_COMMAND);
+                                        Logger(1, PLAYER_ONLY_COMMAND);
                                         return 0;
                                     }
 
-                                    String targetName = StringArgumentType.getString(ctx, "target");
+                                    if (HomeLinkInitialized) {
+                                        String targetName = StringArgumentType.getString(ctx, "target");
+                                        MinecraftServer server = source.getServer();
+                                        ServerPlayer target = server.getPlayerList().getPlayerByName(targetName);
 
-                                    MinecraftServer server = source.getServer();
+                                        if (target == null) {
+                                            PrivateMessage(requester, String.format(PLAYER_NOT_FOUND, targetName));
+                                            return 0;
+                                        }
 
-                                    ServerPlayer target = server.getPlayerList().getPlayerByName(targetName);
+                                        if (target == requester) {
+                                            PrivateMessage(requester, TELEPORT_SELF_DENIED);
+                                            return 0;
+                                        }
 
-                                    if (target == null) {
-                                        HomeLinkMessages.PrivateMessage(
-                                                requester,
-                                                String.format(HomeLinkMessages.PLAYER_NOT_FOUND, targetName)
-                                        );
+                                        if (TeleportRequestManager.hasRequest(target)) {
+                                            PrivateMessage(requester, PLAYER_HAS_PENDING_REQUEST);
+                                            return 0;
+                                        }
+
+                                        TeleportRequestManager.sendRequest(requester, target, RequestType.TO);
+
+                                        PrivateMessage(requester, String.format(TELEPORT_REQUEST_SENT_TO, target.getName().getString()));
+                                        PrivateMessage(target, String.format(TELEPORT_REQUEST_PROMPT_TO, requester.getName().getString(), requester.getName().getString()));
+
+                                        return 1;
+
+                                    } else {
+                                        PrivateMessage(requester, MOD_INIT_NOT_READY);
                                         return 0;
                                     }
-
-                                    if (target == requester) {
-                                        HomeLinkMessages.PrivateMessage(
-                                                requester,
-                                                HomeLinkMessages.TELEPORT_SELF_DENIED
-                                        );
-                                        return 0;
-                                    }
-
-                                    if (TeleportRequestManager.hasRequest(target)) {
-                                        HomeLinkMessages.PrivateMessage(
-                                                requester,
-                                                HomeLinkMessages.PLAYER_HAS_PENDING_REQUEST
-                                        );
-                                        return 0;
-                                    }
-
-                                    TeleportRequestManager.sendRequest(
-                                            requester,
-                                            target,
-                                            RequestType.TO
-                                    );
-
-                                    HomeLinkMessages.PrivateMessage(
-                                            requester,
-                                            String.format(HomeLinkMessages.TELEPORT_REQUEST_SENT_TO,
-                                                    target.getName().getString())
-                                    );
-
-                                    HomeLinkMessages.PrivateMessage(
-                                            target,
-                                            String.format(HomeLinkMessages.TELEPORT_REQUEST_PROMPT_TO,
-                                                    requester.getName().getString(),
-                                                    requester.getName().getString())
-                                    );
-
-                                    return 1;
                                 })
                         )
         );

@@ -4,10 +4,12 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.sumutiu.homelink.config.HomeLinkConfig;
 import com.sumutiu.homelink.storage.HomeStorage;
-import com.sumutiu.homelink.util.HomeLinkMessages;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.server.level.ServerPlayer;
+
+import static com.sumutiu.homelink.HomeLink.HomeLinkInitialized;
+import static com.sumutiu.homelink.util.HomeLinkMessages.*;
 
 public class SetHomeCommand {
 
@@ -18,36 +20,27 @@ public class SetHomeCommand {
                                 .executes(context -> {
 
                                     CommandSourceStack source = context.getSource();
-
                                     if (!(source.getEntity() instanceof ServerPlayer player)) {
-                                        HomeLinkMessages.Logger(1, HomeLinkMessages.PLAYER_ONLY_COMMAND);
+                                        Logger(1, PLAYER_ONLY_COMMAND);
                                         return 0;
                                     }
 
-                                    String name = StringArgumentType.getString(context, "name");
+                                    if (HomeLinkInitialized) {
+                                        String name = StringArgumentType.getString(context, "name");
 
-                                    boolean success = HomeStorage.setHome(
-                                            player,
-                                            name,
-                                            player.blockPosition()
-                                    );
+                                        boolean success = HomeStorage.setHome(player, name, player.blockPosition());
 
-                                    if (success) {
-                                        HomeLinkMessages.PrivateMessage(
-                                                player,
-                                                String.format(HomeLinkMessages.HOME_SET_NAMED, name)
-                                        );
+                                        if (success) {
+                                            PrivateMessage(player, String.format(HOME_SET_NAMED, name));
+                                        } else {
+                                            PrivateMessage(player, String.format(HOME_LIMIT_REACHED, HomeLinkConfig.getMaxHomes()));
+                                        }
+
+                                        return success ? 1 : 0;
                                     } else {
-                                        HomeLinkMessages.PrivateMessage(
-                                                player,
-                                                String.format(
-                                                        HomeLinkMessages.HOME_LIMIT_REACHED,
-                                                        HomeLinkConfig.getMaxHomes()
-                                                )
-                                        );
+                                        PrivateMessage(player, MOD_INIT_NOT_READY);
+                                        return 0;
                                     }
-
-                                    return success ? 1 : 0;
                                 })
                         )
         );

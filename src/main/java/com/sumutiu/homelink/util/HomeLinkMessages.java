@@ -28,6 +28,7 @@ public class HomeLinkMessages {
 
     // Configuration
     public static final String MOD_INIT_FAILED = "Mod has failed to initialize. Error in creating the mod folder.";
+    public static final String MOD_INIT_NOT_READY = "Mod has not initialized.";
     public static final String CONFIG_LOADED = "Successfully loaded configuration.";
     public static final String CONFIG_LOAD_FAILED = "Failed to load HomeLink config: %s";
     public static final String CONFIG_LOAD_FAILED_MALFORMED = "Failed to load configuration due to malformed JSON. Loading default settings.";
@@ -37,6 +38,8 @@ public class HomeLinkMessages {
     // Folder / File Operations
     public static final String MAIN_FOLDER_CREATED = "Main mod folder has been created.";
     public static final String MAIN_FOLDER_CREATION_FAILED = "Failed to create the main mod folder.";
+    public static final String STORAGE_FOLDER_CREATED = "Storage folder has been created.";
+    public static final String STORAGE_FOLDER_CREATION_FAILED = "Failed to create the Storage folder.";
     public static final String HOME_LOAD_FAILED = "Failed to load homes for %s. Error: %s";
     public static final String HOME_SAVE_FAILED = "Failed to save homes for %s. Error: %s";
 
