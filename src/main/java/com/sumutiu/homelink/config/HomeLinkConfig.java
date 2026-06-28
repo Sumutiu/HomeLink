@@ -22,6 +22,7 @@ public class HomeLinkConfig {
         public Integer HomeLink_Invulnerability_Time = 3;
     }
 
+    private static final ConfigData config_Default = new ConfigData();
     private static ConfigData config = new ConfigData();
 
     public static boolean save() {
@@ -43,13 +44,13 @@ public class HomeLinkConfig {
                 config = loaded;
 
                 // Check for missing fields (null means they weren't present)
-                if (config.HomeLink_MaxHomes == null) { config.HomeLink_MaxHomes = 5; updated = true; }
-                if (config.HomeLink_Home_Delay == null) { config.HomeLink_Home_Delay = 5; updated = true; }
-                if (config.HomeLink_Back_Delay == null) { config.HomeLink_Back_Delay = 5; updated = true; }
-                if (config.HomeLink_Cancel_OnMove == null) { config.HomeLink_Cancel_OnMove = false; updated = true; }
-                if (config.HomeLink_Teleport_Delay == null) { config.HomeLink_Teleport_Delay = 5; updated = true; }
-                if (config.HomeLink_Teleport_Accept_Delay == null) { config.HomeLink_Teleport_Accept_Delay = 15; updated = true; }
-                if (config.HomeLink_Invulnerability_Time == null) { config.HomeLink_Invulnerability_Time = 3; updated = true; }
+                if (config.HomeLink_MaxHomes == null) { config.HomeLink_MaxHomes = config_Default.HomeLink_MaxHomes; updated = true; }
+                if (config.HomeLink_Home_Delay == null) { config.HomeLink_Home_Delay = config_Default.HomeLink_Home_Delay; updated = true; }
+                if (config.HomeLink_Back_Delay == null) { config.HomeLink_Back_Delay = config_Default.HomeLink_Back_Delay; updated = true; }
+                if (config.HomeLink_Cancel_OnMove == null) { config.HomeLink_Cancel_OnMove = config_Default.HomeLink_Cancel_OnMove; updated = true; }
+                if (config.HomeLink_Teleport_Delay == null) { config.HomeLink_Teleport_Delay = config_Default.HomeLink_Teleport_Delay; updated = true; }
+                if (config.HomeLink_Teleport_Accept_Delay == null) { config.HomeLink_Teleport_Accept_Delay = config_Default.HomeLink_Teleport_Accept_Delay; updated = true; }
+                if (config.HomeLink_Invulnerability_Time == null) { config.HomeLink_Invulnerability_Time = config_Default.HomeLink_Invulnerability_Time; updated = true; }
 
                 Logger(0, CONFIG_LOADED);
             } else {
