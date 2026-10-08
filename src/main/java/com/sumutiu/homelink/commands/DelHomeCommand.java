@@ -28,8 +28,12 @@ public class DelHomeCommand {
                                     if (HomeLinkInitialized) {
                                         String name = StringArgumentType.getString(ctx, "name");
 
-                                        if (HomeStorage.getHome(player, name) != null) {
-                                            HomeStorage.deleteHome(player, name);
+                                        if (HomeStorage.getHomes(player) == null) {
+                                            PrivateMessage(player, HOME_DATA_UNAVAILABLE);
+                                            return 0;
+                                        }
+
+                                        if (HomeStorage.deleteHome(player, name)) {
                                             PrivateMessage(player, String.format(HOME_DELETED, name));
 
                                             return 1;

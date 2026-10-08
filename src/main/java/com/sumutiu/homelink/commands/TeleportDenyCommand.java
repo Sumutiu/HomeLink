@@ -20,8 +20,10 @@ public class TeleportDenyCommand {
                         .then(Commands.argument("name", StringArgumentType.word())
                                 .suggests((context, builder) -> {
 
-                                    if (!(context.getSource().getEntity() instanceof ServerPlayer target)) { return builder.buildFuture(); }
-                                    return TeleportRequestManager.suggestPendingRequestNames(target, builder);
+                                    if (!(context.getSource().getEntity() instanceof ServerPlayer target)) {
+                                        return builder.buildFuture();
+                                    }
+                                    return TeleportRequestManager.suggestPendingRequestNames(context.getSource().getServer(), target, builder);
                                 })
                                 .executes(ctx -> {
 
@@ -48,7 +50,8 @@ public class TeleportDenyCommand {
                                             return 0;
                                         }
 
-                                        TeleportRequestManager.clearRequest(target.getUUID());
+                                        // Only this request; requests the player sent to others stay open
+                                        TeleportRequestManager.removeRequestFor(target);
 
                                         PrivateMessage(target, String.format(TELEPORT_REQUEST_DENIED_FROM, requester.getName().getString()));
                                         PrivateMessage(requester, String.format(TELEPORT_REQUEST_DENIED_TO, target.getName().getString()));

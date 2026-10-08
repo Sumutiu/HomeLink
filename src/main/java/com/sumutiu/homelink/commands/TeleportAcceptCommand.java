@@ -25,8 +25,10 @@ public class TeleportAcceptCommand {
                 Commands.literal("tpaccept")
                         .then(Commands.argument("name", StringArgumentType.word())
                                 .suggests((context, builder) -> {
-                                    if (!(context.getSource().getEntity() instanceof ServerPlayer target)) { return builder.buildFuture(); }
-                                    return TeleportRequestManager.suggestPendingRequestNames(target, builder);
+                                    if (!(context.getSource().getEntity() instanceof ServerPlayer target)) {
+                                        return builder.buildFuture();
+                                    }
+                                    return TeleportRequestManager.suggestPendingRequestNames(context.getSource().getServer(), target, builder);
                                 })
 
                                 .executes(ctx -> {
@@ -54,9 +56,21 @@ public class TeleportAcceptCommand {
                                             return 0;
                                         }
 
-                                        TeleportRequestManager.clearRequest(target.getUUID());
+                                        // The player who will be moved must not have another teleport pending.
+                                        // If they do, keep the request so it can be accepted again in a moment.
+                                        ServerPlayer teleported = request.type() == RequestType.TO ? requester : target;
+                                        if (TeleportScheduler.isTeleporting(teleported)) {
+                                            PrivateMessage(target, teleported == target
+                                                    ? TELEPORT_IN_PROGRESS
+                                                    : String.format(PLAYER_TELEPORT_IN_PROGRESS, requester.getName().getString()));
+                                            return 0;
+                                        }
+
+                                        // Only this request; requests the player sent to others stay open
+                                        TeleportRequestManager.removeRequestFor(target);
 
                                         int delay = HomeLinkConfig.getTeleportDelay();
+                                        boolean scheduled;
 
                                         // =========================
                                         // REQUEST TYPE: TO
@@ -64,21 +78,22 @@ public class TeleportAcceptCommand {
                                         if (request.type() == RequestType.TO) {
 
                                             PrivateMessage(target, String.format(TELEPORT_REQUEST_ACCEPTED, requester.getName().getString()));
-                                            PrivateMessage(requester, String.format(TELEPORTING_TO_IN_SECONDS, target.getName().getString(), delay));
 
-                                            TeleportScheduler.schedule(requester, target, delay, () -> {
+                                            String delayMessage = String.format(TELEPORTING_TO_IN_SECONDS, target.getName().getString(), delay);
+                                            scheduled = TeleportScheduler.schedule(requester, target, delay, delayMessage, () -> {
+                                                // getX()/getZ() are exact positions, not block corners, so no +0.5
                                                 requester.teleportTo(
                                                         target.level(),
-                                                        target.getX() + 0.5,
+                                                        target.getX(),
                                                         target.getY(),
-                                                        target.getZ() + 0.5,
+                                                        target.getZ(),
                                                         EnumSet.noneOf(Relative.class),
                                                         requester.getYRot(),
                                                         requester.getXRot(),
                                                         false // don't reset camera
                                                 );
 
-                                                PrivateMessage( requester, String.format(YOU_TELEPORTED_TO_PLAYER, target.getName().getString()));
+                                                PrivateMessage(requester, String.format(YOU_TELEPORTED_TO_PLAYER, target.getName().getString()));
                                                 PrivateMessage(target, String.format(TELEPORTED_TO_YOU, requester.getName().getString()));
 
                                                 if (requester.isAlive() && target.isAlive()) {
@@ -86,22 +101,20 @@ public class TeleportAcceptCommand {
                                                 }
                                             });
 
-                                        }
+                                        } else {
 
-                                        // =========================
-                                        // REQUEST TYPE: HERE
-                                        // =========================
-                                        else {
-
+                                            // =========================
+                                            // REQUEST TYPE: HERE
+                                            // =========================
                                             PrivateMessage(requester, String.format(TELEPORT_REQUEST_ACCEPTED_BY, target.getName().getString()));
-                                            PrivateMessage(target, String.format(TELEPORTING_YOU_TO_IN_SECONDS, requester.getName().getString(), delay));
 
-                                            TeleportScheduler.schedule(target, requester, delay, () -> {
+                                            String delayMessage = String.format(TELEPORTING_YOU_TO_IN_SECONDS, requester.getName().getString(), delay);
+                                            scheduled = TeleportScheduler.schedule(target, requester, delay, delayMessage, () -> {
                                                 target.teleportTo(
                                                         requester.level(),
-                                                        requester.getX() + 0.5,
+                                                        requester.getX(),
                                                         requester.getY(),
-                                                        requester.getZ() + 0.5,
+                                                        requester.getZ(),
                                                         EnumSet.noneOf(Relative.class),
                                                         target.getYRot(),
                                                         target.getXRot(),
@@ -117,7 +130,7 @@ public class TeleportAcceptCommand {
                                             });
                                         }
 
-                                        return 1;
+                                        return scheduled ? 1 : 0;
                                     } else {
                                         PrivateMessage(target, MOD_INIT_NOT_READY);
                                         return 0;

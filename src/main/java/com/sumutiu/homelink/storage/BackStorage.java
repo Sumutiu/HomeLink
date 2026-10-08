@@ -3,8 +3,8 @@ package com.sumutiu.homelink.storage;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.core.BlockPos;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class BackStorage {
 
@@ -22,8 +22,9 @@ public class BackStorage {
         }
     }
 
-    private static final Map<String, BackData> lastPositions = new HashMap<>();
+    private static final Map<String, BackData> lastPositions = new ConcurrentHashMap<>();
 
+    @SuppressWarnings("resource") // player.level() is the world, never close it
     public static void save(ServerPlayer player, BlockPos pos) {
         lastPositions.put(player.getStringUUID(), new BackData(
                 pos,
@@ -35,5 +36,10 @@ public class BackStorage {
 
     public static BackData get(ServerPlayer player) {
         return lastPositions.get(player.getStringUUID());
+    }
+
+    // Server stopped: forget everything
+    public static void clear() {
+        lastPositions.clear();
     }
 }

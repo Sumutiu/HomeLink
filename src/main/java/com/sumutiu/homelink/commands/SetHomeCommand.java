@@ -28,15 +28,15 @@ public class SetHomeCommand {
                                     if (HomeLinkInitialized) {
                                         String name = StringArgumentType.getString(context, "name");
 
-                                        boolean success = HomeStorage.setHome(player, name, player.blockPosition());
+                                        HomeStorage.SetHomeResult result = HomeStorage.setHome(player, name, player.blockPosition());
 
-                                        if (success) {
-                                            PrivateMessage(player, String.format(HOME_SET_NAMED, name));
-                                        } else {
-                                            PrivateMessage(player, String.format(HOME_LIMIT_REACHED, HomeLinkConfig.getMaxHomes()));
+                                        switch (result) {
+                                            case SET -> PrivateMessage(player, String.format(HOME_SET_NAMED, name));
+                                            case LIMIT_REACHED -> PrivateMessage(player, String.format(HOME_LIMIT_REACHED, HomeLinkConfig.getMaxHomes()));
+                                            case UNAVAILABLE -> PrivateMessage(player, HOME_DATA_UNAVAILABLE);
                                         }
 
-                                        return success ? 1 : 0;
+                                        return result == HomeStorage.SetHomeResult.SET ? 1 : 0;
                                     } else {
                                         PrivateMessage(player, MOD_INIT_NOT_READY);
                                         return 0;

@@ -20,20 +20,20 @@ public class HomeLinkMessages {
         |_|  |_|\\___/|_| |_| |_|\\___|______|_|_| |_|_|\\_\\
         """;
     public static final String Mod_ID = "[HomeLink]";
-    public static final String SCHEDULER_SERVICE_NAME = "[TeleportScheduler]";
-    public static final String MANAGER_SERVICE_NAME = "[TeleportRequestManager]";
     public static final String SERVER_NOT_AVAILABLE = "Server not available.";
     //public static final String INVALID_CONNECTION_HANDLER = "Invalid connection handler or player during join event.";
     public static final String PLAYER_ONLY_COMMAND = "This command can only be used by players.";
 
     // Configuration
     public static final String MOD_INIT_FAILED = "Mod has failed to initialize. Error in creating the mod folder.";
-    public static final String MOD_INIT_NOT_READY = "SimpleClumps mod is not initialized. Try again later.";
+    public static final String MOD_INIT_NOT_READY = "HomeLink mod is not initialized. Try again later.";
     public static final String CONFIG_LOADED = "Successfully loaded configuration.";
     public static final String CONFIG_LOAD_FAILED = "Failed to load HomeLink config: %s";
     public static final String CONFIG_LOAD_FAILED_MALFORMED = "Failed to load configuration due to malformed JSON. Loading default settings.";
     public static final String CONFIG_SAVE_FAILED = "Failed to save HomeLink config: %s";
-    public static final String DEFAULT_CONFIG_LOADED = "Default Config loaded. Please edit the default values in the HomeLink/Config folder.";
+    public static final String DEFAULT_CONFIG_LOADED = "Default config created. Edit config/HomeLink/HomeLink.json to change the settings.";
+    public static final String CONFIG_SAVED = "Saved configuration file: %s";
+    public static final String CONFIG_INVALID_VALUE = "Config value %s = %d is not valid, using %d instead.";
 
     // Folder / File Operations
     public static final String MAIN_FOLDER_CREATED = "Main mod folder has been created.";
@@ -42,22 +42,23 @@ public class HomeLinkMessages {
     public static final String STORAGE_FOLDER_CREATION_FAILED = "Failed to create the Storage folder.";
     public static final String HOME_LOAD_FAILED = "Failed to load homes for %s. Error: %s";
     public static final String HOME_SAVE_FAILED = "Failed to save homes for %s. Error: %s";
+    public static final String HOME_FILE_CORRUPT = "Home file %s could not be read and was moved to %s.";
+    public static final String HOME_FILE_CORRUPT_MOVE_FAILED = "Home file %s could not be read and could not be moved aside. Error: %s";
 
     // Teleportation - General
     public static final String TELEPORT_IN_PROGRESS = "You already have a teleport in progress.";
+    public static final String PLAYER_TELEPORT_IN_PROGRESS = "%s already has a teleport in progress. Try again in a moment.";
     public static final String TELEPORT_DELAY_MESSAGE = "Teleporting in %d seconds...";
     public static final String TELEPORT_CANCELLED_MOVEMENT = "Teleport cancelled due to movement.";
     public static final String TELEPORT_CANCELLED_DAMAGED = "Teleport cancelled due to damage.";
     public static final String TELEPORT_CANCELLED_CANCEL = "Teleport cancelled on your request.";
     public static final String TELEPORT_CANCELLED_DISCONNECT = "Teleport cancelled. Player disconnected.";
-    public static final String TELEPORT_CANCEL_QUEUED = "Teleport is being cancelled...";
+    public static final String TELEPORT_CANCELLED_DIED = "Teleport cancelled. Player died.";
+    public static final String TELEPORT_FAILED = "Teleport of %s failed: %s";
+    public static final String TELEPORT_FAILED_PRIVATE = "Teleport failed. Please contact an admin.";
 
-    // Teleportation - Scheduling
-    public static final String TELEPORT_SCHEDULER_SHUTDOWN = "TeleportScheduler has been shut down.";
-    public static final String TELEPORT_SCHEDULER_SHUTDOWN_FAILED = "Failed to shut down TeleportScheduler: %s";
-    public static final String SHUTTING_DOWN_SCHEDULERS = "Shutting down HomeLink Schedulers...";
-    public static final String TELEPORT_REQUEST_MANAGER_SHUTDOWN = "TeleportRequestManager scheduler has been shut down.";
-    public static final String TELEPORT_REQUEST_MANAGER_SHUTDOWN_FAILED = "Failed to shut down TeleportRequestManager scheduler: %s";
+    // Shutdown
+    public static final String SHUTTING_DOWN = "Saving HomeLink data and clearing pending teleports...";
 
     // Teleportation - Errors & Limits
     public static final String TELEPORT_SELF_DENIED = "You cannot teleport yourself to yourself.";
@@ -103,6 +104,8 @@ public class HomeLinkMessages {
     public static final String HOME_TELEPORTED_NAMED = "Teleported to home: %s";
     public static final String HOME_SET_NAMED = "Home set at your current location: %s";
     public static final String HOME_LIMIT_REACHED = "You have reached the maximum number of homes (%d). Delete one to set another.";
+    public static final String HOME_CHOOSE = "Which home? Use /home <name>. Your homes: %s";
+    public static final String HOME_DATA_UNAVAILABLE = "Your homes can't be loaded right now. Try again later or contact an admin.";
 
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Mod_ID);

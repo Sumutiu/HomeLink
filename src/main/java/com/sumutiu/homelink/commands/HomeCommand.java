@@ -16,13 +16,19 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 
 import static com.sumutiu.homelink.HomeLink.HomeLinkInitialized;
 import static com.sumutiu.homelink.util.HomeLinkMessages.*;
 
 public class HomeCommand {
+
+    // "/home" without a name uses the home with this name
+    private static final String DEFAULT_HOME_NAME = "home";
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("home")
@@ -35,24 +41,36 @@ public class HomeCommand {
                 }
 
                 if (HomeLinkInitialized) {
-                    Map<String, HomeData> playerHomes = HomeStorage.getAllHomes(player);
+                    Map<String, HomeData> playerHomes = HomeStorage.getHomes(player);
 
-                    if (playerHomes == null || playerHomes.isEmpty()) {
+                    if (playerHomes == null) {
+                        PrivateMessage(player, HOME_DATA_UNAVAILABLE);
+                        return 0;
+                    }
+
+                    if (playerHomes.isEmpty()) {
                         PrivateMessage(player, HOME_NONE_SET);
                         return 0;
                     }
 
-                    var iterator = playerHomes.entrySet().iterator();
+                    // Use the home called "home", or the only home; otherwise ask which one
+                    String name = DEFAULT_HOME_NAME;
+                    HomeData home = playerHomes.get(name);
 
-                    if (!iterator.hasNext()) {
-                        PrivateMessage(player, HOME_NONE_SET);
+                    if (home == null && playerHomes.size() == 1) {
+                        Map.Entry<String, HomeData> only = playerHomes.entrySet().iterator().next();
+                        name = only.getKey();
+                        home = only.getValue();
+                    }
+
+                    if (home == null) {
+                        List<String> names = new ArrayList<>(playerHomes.keySet());
+                        Collections.sort(names);
+                        PrivateMessage(player, String.format(HOME_CHOOSE, String.join(", ", names)));
                         return 0;
                     }
 
-                    Map.Entry<String, HomeData> first =
-                            playerHomes.entrySet().iterator().next();
-
-                    return teleportToHome(player, first.getKey(), first.getValue(), source.getServer());
+                    return teleportToHome(player, name, home, source.getServer());
                 } else {
                     PrivateMessage(player, MOD_INIT_NOT_READY);
                     return 0;
@@ -70,7 +88,14 @@ public class HomeCommand {
 
                     if (HomeLinkInitialized) {
                         String name = StringArgumentType.getString(ctx, "name");
-                        HomeData home = HomeStorage.getHome(player, name);
+                        Map<String, HomeData> playerHomes = HomeStorage.getHomes(player);
+
+                        if (playerHomes == null) {
+                            PrivateMessage(player, HOME_DATA_UNAVAILABLE);
+                            return 0;
+                        }
+
+                        HomeData home = playerHomes.get(name);
 
                         if (home == null) {
                             PrivateMessage(player, String.format(HOME_NOT_FOUND, name));
@@ -102,7 +127,7 @@ public class HomeCommand {
         Identifier location = Identifier.tryParse(home.world);
 
         if (location == null) {
-            PrivateMessage(player, "Invalid world id: " + home.world);
+            PrivateMessage(player, String.format(HOME_WORLD_NOT_FOUND, home.world));
             return 0;
         }
 
@@ -115,7 +140,7 @@ public class HomeCommand {
             return 0;
         }
 
-        TeleportScheduler.schedule(player, null, HomeLinkConfig.getHomeDelay(), () -> {
+        boolean scheduled = TeleportScheduler.schedule(player, null, HomeLinkConfig.getHomeDelay(), () -> {
             player.teleportTo(
                     targetWorld,
                     home.position.getX() + 0.5,
@@ -130,6 +155,6 @@ public class HomeCommand {
             PrivateMessage(player, String.format(HOME_TELEPORTED_NAMED, name));
         });
 
-        return 1;
+        return scheduled ? 1 : 0;
     }
 }

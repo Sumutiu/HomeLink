@@ -58,7 +58,7 @@ public class BackCommand {
                             return 0;
                         }
 
-                        TeleportScheduler.schedule(player, null, HomeLinkConfig.getBackDelay(), () -> {
+                        boolean scheduled = TeleportScheduler.schedule(player, null, HomeLinkConfig.getBackDelay(), () -> {
 
                             player.teleportTo(
                                     targetWorld,
@@ -75,7 +75,7 @@ public class BackCommand {
                             PrivateMessage(player, BACK_TELEPORTED);
                         });
 
-                        return 1;
+                        return scheduled ? 1 : 0;
                     } else {
                         PrivateMessage(player, MOD_INIT_NOT_READY);
                         return 0;
