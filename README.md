@@ -9,9 +9,10 @@ Perfect for survival servers, SMPs, and adventure-based communities.
 
 - 📌 Set and delete named home locations  
 - 🧭 Teleport to your homes using `/home <name>`  
-- 💀 Return to your previous location with `/back`  
+- ↩️ Return to where you were before your last teleport with `/tpback`  
 - 👥 Send and accept teleport requests to and from other players  
-- ⛔ Cancel teleports on player movement or damage *(configurable)*  
+- ⛔ Pending teleports are cancelled by damage, and by movement *(configurable)*  
+- 🛡 Short damage protection after arriving *(configurable)*  
 - 📁 Saves homes per-player in easy-to-read JSON files  
 - 🌍 Multi-world and nether-friendly  
 - 💬 Intuitive feedback messages and logging  
@@ -23,13 +24,13 @@ Perfect for survival servers, SMPs, and adventure-based communities.
 
 - `/sethome <name>` – Set a home at your current location  
 - `/delhome <name>` – Delete a specific home  
-- `/home <name>` – Teleport to a home  
-- `/back` – Return to your last location  
+- `/home [name]` – Teleport to a home (without a name: your home called "home", or your only home)  
+- `/tpback` – Return to where you were before your last teleport  
 - `/tpto <player>` – Request to teleport to another player  
 - `/tphere <player>` – Request another player to teleport to you  
 - `/tpaccept <player>` – Accept a pending request  
 - `/tpdeny <player>` – Deny a pending request  
-- `/tpcancel` – Cancel a pending request
+- `/tpcancel` – Cancel your pending teleport
 
 ---
 
@@ -40,11 +41,12 @@ Edit the config file located at:
 
 You can configure:
 - Max number of homes
-- Teleport delay
-- Back delay
+- Home delay (`/home`)
+- Back delay (`/tpback`)
+- Teleport delay (`/tpto`, `/tphere`)
 - Whether teleport cancels on movement
-- Whether teleport cancels on damage
 - Teleport request accept timeout
+- Damage protection time after arriving
 
 ---
 
