@@ -2,9 +2,11 @@ package com.sumutiu.homelink.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
 
-import java.io.*;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
@@ -40,14 +42,16 @@ public class HomeLinkConfig {
         }
     }
 
+    // Never fails: if the file can't be read, the defaults are used for this run
     public static void load() {
         boolean updated = false;
-        try (Reader reader = new FileReader(CONFIG_FILE.toFile(), StandardCharsets.UTF_8)) {
-            ConfigData loaded = GSON.fromJson(reader, ConfigData.class);
+        try {
+            String text = Files.readString(CONFIG_FILE, StandardCharsets.UTF_8);
+            ConfigData loaded = GSON.fromJson(text, ConfigData.class);
             if (loaded != null) {
                 config = loaded;
 
-                // Check for missing fields (null means they weren't present)
+                // Check for fields set to null
                 if (config.HomeLink_MaxHomes == null) {
                     config.HomeLink_MaxHomes = config_Default.HomeLink_MaxHomes;
                     updated = true;
@@ -75,6 +79,15 @@ public class HomeLinkConfig {
                 if (config.HomeLink_Invulnerability_Time == null) {
                     config.HomeLink_Invulnerability_Time = config_Default.HomeLink_Invulnerability_Time;
                     updated = true;
+                }
+
+                // Check for fields missing from the file (Gson keeps the default value for those,
+                // so they are never null): write them to the file
+                JsonObject json = JsonParser.parseString(text).getAsJsonObject();
+                for (String key : GSON.toJsonTree(config).getAsJsonObject().keySet()) {
+                    if (!json.has(key)) {
+                        updated = true;
+                    }
                 }
 
                 Logger(0, CONFIG_LOADED);
