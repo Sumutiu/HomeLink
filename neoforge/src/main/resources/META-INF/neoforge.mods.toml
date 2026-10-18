@@ -1,0 +1,26 @@
+modLoader = "javafml"
+loaderVersion = "${neoforge_loader_version_range}"
+license = "AGPL-3.0"
+
+[[mods]]
+modId = "homelink"
+version = "${version}"
+displayName = "HomeLink"
+authors = "Sumutiu"
+# Square icon shown in the mod list (a path from the root of the jar)
+iconFile = "assets/homelink/HomeLink.png"
+description = '''Teleport with style! Teleportation mod with homes and back functionality.'''
+
+[[dependencies.homelink]]
+modId = "neoforge"
+type = "required"
+versionRange = "[${neoforge_version},)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.homelink]]
+modId = "minecraft"
+type = "required"
+versionRange = "${minecraft_version_range}"
+ordering = "NONE"
+side = "BOTH"

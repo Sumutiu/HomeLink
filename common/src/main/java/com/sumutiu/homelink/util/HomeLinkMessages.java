@@ -1,7 +1,5 @@
 package com.sumutiu.homelink.util;
 
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -127,14 +125,6 @@ public class HomeLinkMessages {
             case 1 -> LOGGER.warn(Mod_ID + ": {}", message);
             case 2 -> LOGGER.error(Mod_ID + ": {}", message);
         }
-    }
-
-    public static String getModVersion() {
-        return FabricLoader.getInstance()
-                .getModContainer("homelink")
-                .map(ModContainer::getMetadata)
-                .map(meta -> meta.getVersion().getFriendlyString())
-                .orElse("unknown");
     }
 
     public static boolean isConnected(ServerPlayer player) {

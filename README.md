@@ -1,6 +1,6 @@
 # 🏠 HomeLink – Teleport with Style!
 
-**HomeLink** is a lightweight and fully server-side **Fabric** mod that lets players create, manage, and teleport to custom home locations with ease.  
+**HomeLink** is a lightweight and fully server-side mod for **Fabric** and **NeoForge** that lets players create, manage, and teleport to custom home locations with ease.  
 Perfect for survival servers, SMPs, and adventure-based communities.
 
 ---
@@ -52,8 +52,29 @@ You can configure:
 
 ## 🧩 Requirements
 
+**Fabric**
 - [Fabric Loader](https://fabricmc.net/use/)
 - [Fabric API](https://modrinth.com/mod/fabric-api)
+
+**NeoForge**
+- [NeoForge](https://neoforged.net/) (nothing else needed)
+
+---
+
+## 🛠️ Building
+
+The project builds both loaders from one shared codebase:
+
+- `common/` – the mod itself (homes, teleports, commands, config, storage), plain Minecraft code  
+- `fabric/` – the Fabric entrypoint and `fabric.mod.json`  
+- `neoforge/` – the NeoForge entrypoint and `neoforge.mods.toml`  
+
+Run `gradlew build` (Java 25). The jars are created in:
+
+- `fabric/build/libs/homelink-fabric-<version>.jar`  
+- `neoforge/build/libs/homelink-neoforge-<version>.jar`  
+
+Versions (Minecraft, Fabric, NeoForge) are all set in `gradle.properties`.
 
 ---
 
