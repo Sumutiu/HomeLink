@@ -37,7 +37,7 @@ Perfect for survival servers, SMPs, and adventure-based communities.
 ## ⚙️ Configuration
 
 Edit the config file located at:  
-`/config/HomeLink/HomeLink.json`
+`/config/HomeLink_Seed_<world seed>/HomeLink.json`
 
 You can configure:
 - Max number of homes
