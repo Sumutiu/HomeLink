@@ -28,8 +28,8 @@ public class HomeLink {
 
     public static final String MOD_ID = "homelink";
 
-    public static final Path CONFIG_FOLDER = Path.of("config", "HomeLink");
-    public static final Path CONFIG_FILE = CONFIG_FOLDER.resolve("HomeLink.json");
+    public static Path CONFIG_FOLDER;
+    public static Path CONFIG_FILE;
     public static Path STORAGE_FOLDER;
 
     public static volatile boolean HomeLinkInitialized = false;
@@ -53,14 +53,11 @@ public class HomeLink {
     // -----------------------------
     public static void onServerStarted(MinecraftServer server) {
 
-        long seed = server.getWorldGenSettings()
-                .options()
-                .seed();
+        long seed = server.getWorldGenSettings().options().seed();
 
-        STORAGE_FOLDER = Path.of(
-                "mods",
-                "HomeLink_Seed_" + Long.toUnsignedString(seed)
-        );
+        CONFIG_FOLDER = Path.of("config", "HomeLink_Seed_" + Long.toUnsignedString(seed));
+        CONFIG_FILE = CONFIG_FOLDER.resolve("HomeLink.json");
+        STORAGE_FOLDER = Path.of("mods", "HomeLink_Seed_" + Long.toUnsignedString(seed));
 
         if (initPlugin()) {
             currentServer = server;
